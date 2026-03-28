@@ -6,66 +6,181 @@
     <title>Vocab Trainer PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Тема: Свежий Голубой и Бирюзовый */
-        body { 
-            background-color: #f0f9ff; /* light cyan background */
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            -webkit-tap-highlight-color: transparent; 
-        }
-        .card { background: white; border-radius: 24px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.03); }
-        .btn { transition: all 0.15s ease-in-out; cursor: pointer; border-radius: 16px; font-weight: 600; }
-        .btn:active { transform: scale(0.96); opacity: 0.9; }
-        
-        /* Цвета кнопок */
-        .btn-primary { background-color: #06b6d4; color: white; } /* teal */
-        .btn-primary:hover { background-color: #0891b2; }
-        
-        .btn-secondary { background-color: #e0f7fa; color: #0e7490; border: 2px solid #a5f3fc; } /* light teal */
-        .btn-secondary:hover { background-color: #cffafe; }
-
-        .btn-success { background-color: #22d3ee; color: white; } /* cyan */
-        .btn-danger { background-color: #fee2e2; color: #b91c1c; border: 2px solid #fecaca; } /* light red for errors */
-        
-        /* Анимация блюра */
-        #word-display { transition: filter 0.3s ease; }
+        body { background-color: #f0f9ff; font-family: -apple-system, system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .card { background: white; border-radius: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .btn { transition: all 0.1s ease; cursor: pointer; border-radius: 18px; font-weight: 600; text-align: center; display: flex; align-items: center; justify-content: center; }
+        .btn:active { transform: scale(0.95); opacity: 0.8; }
+        .btn-cyan { background-color: #06b6d4; color: white; }
+        .btn-light { background-color: #e0f7fa; color: #0891b2; border: 2px solid #a5f3fc; }
+        .btn-success { background-color: #22d3ee; color: white; }
+        .btn-error { background-color: #fee2e2; color: #b91c1c; border: 2px solid #fecaca; }
+        #word-display { transition: filter 0.3s ease; line-height: 1.2; }
+        .blur-active { filter: blur(25px); }
     </style>
 </head>
-<body class="p-4 pt-8">
+<body class="p-4 pt-10">
     <div id="app" class="max-w-md mx-auto">
         
-        <div id="menu" class="space-y-8 text-center">
-            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600 tracking-tight">Vocab<span class="font-light text-cyan-600">Trainer</span></h1>
+        <div id="menu-screen" class="space-y-10">
+            <header class="text-center">
+                <h1 class="text-4xl font-black text-cyan-600 tracking-tight">Vocab<span class="text-blue-500">Trainer</span></h1>
+                <p class="text-cyan-800 opacity-60 font-medium">Smart practice for kids</p>
+            </header>
             
             <div class="space-y-4">
-                <button onclick="startDictation()" class="w-full py-8 btn-primary text-2xl shadow-cyan-200 shadow-lg btn">Start Practice</button>
-                <button onclick="showSettings()" class="w-full py-4 btn-secondary btn">Settings & Word List</button>
+                <button onclick="startSession()" class="w-full h-24 btn btn-cyan text-2xl shadow-lg shadow-cyan-100">Start Practice</button>
+                <button onclick="openSettings()" class="w-full h-14 btn btn-light">Word List & Import</button>
             </div>
             
-            <div id="stats" class="card p-4 text-cyan-800 text-sm font-medium bg-cyan-50"></div>
+            <div id="stats-box" class="card p-5 text-center text-cyan-700 bg-cyan-50/50 text-sm font-semibold"></div>
         </div>
 
-        <div id="dictation" class="hidden space-y-8 text-center">
-            <div class="card p-12 min-h-[200px] flex flex-col justify-center items-center relative border-2 border-cyan-100">
-                <div id="word-display" class="text-5xl font-bold text-gray-900 mb-4 tracking-tight">Word</div>
-                <button id="reveal-btn" onclick="revealWord()" class="text-cyan-500 underline text-sm font-medium">Tap to reveal</button>
+        <div id="dictation-screen" class="hidden space-y-8">
+            <div class="card p-12 min-h-[250px] flex flex-col justify-center items-center border-2 border-cyan-50 relative">
+                <div id="word-text" class="text-4xl font-bold text-gray-800 text-center blur-active">Word</div>
+                <button id="show-btn" onclick="unblur()" class="mt-6 text-cyan-500 font-bold uppercase text-xs tracking-widest bg-cyan-50 px-4 py-2 rounded-full">Tap to reveal</button>
             </div>
             
-            <div class="flex gap-4">
-                <button onclick="markWord('error')" class="flex-1 py-7 btn-danger text-lg btn">Got Errors</button>
-                <button onclick="markWord('easy')" class="flex-1 py-7 btn-success text-lg btn">Too Easy</button>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="handleResult('wrong')" class="h-20 btn btn-error text-lg">Mistake</button>
+                <button onclick="handleResult('right')" class="h-20 btn btn-success text-lg">Easy</button>
             </div>
             
-            <button onclick="stopDictation()" class="text-gray-400 text-sm font-medium hover:text-gray-600">Quit Session</button>
+            <button onclick="goToMenu()" class="w-full text-gray-400 font-bold text-sm">Finish Session</button>
         </div>
 
-        <div id="settings" class="hidden space-y-6">
-            <div class="card p-6 border border-gray-100">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Bulk Import</h2>
-                <textarea id="mass-input" class="w-full p-4 border-2 border-cyan-100 rounded-xl h-28 mb-3 focus:border-cyan-300 focus:ring-0 text-sm" placeholder="Paste words separated by commas or new lines..."></textarea>
-                <button onclick="importWords()" class="w-full py-3 btn-primary btn">Add to My List</button>
+        <div id="settings-screen" class="hidden space-y-6">
+            <div class="card p-6">
+                <h2 class="text-xl font-bold mb-4">Bulk Import</h2>
+                <textarea id="import-area" class="w-full p-4 border-2 border-cyan-100 rounded-2xl h-32 focus:outline-none focus:border-cyan-400 text-base" placeholder="Paste words here..."></button></textarea>
+                <button onclick="doImport()" class="w-full h-12 mt-3 btn btn-cyan">Add Words</button>
             </div>
             
-            <div class="card p-6 border border-gray-100">
+            <div class="card p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold text-gray-800">My Words (<span id="word-count" class="text-cyan-600">0</span>)</h2>
-                    <button onclick="
+                    <h2 class="text-xl font-bold">My List (<span id="total-count">0</span>)</h2>
+                    <button onclick="resetData()" class="text-red-400 text-xs font-bold uppercase">Reset</button>
+                </div>
+                <div id="words-container" class="max-h-64 overflow-y-auto space-y-2"></div>
+            </div>
+            
+            <button onclick="goToMenu()" class="w-full h-14 bg-gray-100 text-gray-600 btn">Back to Menu</button>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация данных
+        let words = [];
+        try {
+            const saved = localStorage.getItem('vocab-data-v2');
+            words = saved ? JSON.parse(saved) : [];
+        } catch(e) { console.error("Data error", e); words = []; }
+
+        let sessionWords = [];
+        let sessionIndex = 0;
+
+        function updateUI() {
+            const diffCount = words.filter(w => w.w > 5).length;
+            document.getElementById('stats-box').innerHTML = `WORDS: ${words.length} &nbsp; | &nbsp; NEEDS REVIEW: ${diffCount}`;
+            document.getElementById('total-count').innerText = words.length;
+            renderList();
+        }
+
+        function renderList() {
+            const container = document.getElementById('words-container');
+            if (words.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 text-center py-4">List is empty</p>';
+                return;
+            }
+            container.innerHTML = [...words].sort((a,b) => b.w - a.w).map(w => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <span class="font-medium">${w.t} ${w.w > 5 ? '⚠️' : ''}</span>
+                    <button onclick="deleteWord('${w.t}')" class="text-red-300 px-2 text-xl">×</button>
+                </div>
+            `).join('');
+        }
+
+        function goToMenu() {
+            document.getElementById('menu-screen').style.display = 'block';
+            document.getElementById('dictation-screen').style.display = 'none';
+            document.getElementById('settings-screen').style.display = 'none';
+            updateUI();
+        }
+
+        function openSettings() {
+            document.getElementById('menu-screen').style.display = 'none';
+            document.getElementById('settings-screen').style.display = 'block';
+            updateUI();
+        }
+
+        function startSession() {
+            if (words.length < 2) return alert("Add more words first!");
+            // Умная сортировка по весу (ошибкам)
+            sessionWords = [...words].sort((a,b) => (b.w + Math.random()*10) - (a.w + Math.random()*10)).slice(0, 10);
+            sessionIndex = 0;
+            document.getElementById('menu-screen').style.display = 'none';
+            document.getElementById('dictation-screen').style.display = 'block';
+            showWord();
+        }
+
+        function showWord() {
+            if (sessionIndex >= sessionWords.length) {
+                alert("Session Complete!");
+                return goToMenu();
+            }
+            const wordObj = sessionWords[sessionIndex];
+            const el = document.getElementById('word-text');
+            el.innerText = wordObj.t;
+            el.classList.add('blur-active');
+            document.getElementById('show-btn').style.display = 'block';
+        }
+
+        function unblur() {
+            document.getElementById('word-text').classList.remove('blur-active');
+            document.getElementById('show-btn').style.display = 'none';
+        }
+
+        function handleResult(res) {
+            const current = sessionWords[sessionIndex];
+            const idx = words.findIndex(w => w.t === current.t);
+            if (idx !== -1) {
+                if (res === 'wrong') words[idx].w += 10;
+                else words[idx].w = Math.max(1, words[idx].w - 2);
+                localStorage.setItem('vocab-data-v2', JSON.stringify(words));
+            }
+            sessionIndex++;
+            showWord();
+        }
+
+        function doImport() {
+            const area = document.getElementById('import-area');
+            const newOnes = area.value.split(/[, \n]+/).filter(x => x.trim().length > 0);
+            newOnes.forEach(txt => {
+                const t = txt.trim();
+                if (!words.find(w => w.t === t)) words.push({t: t, w: 5});
+            });
+            area.value = "";
+            localStorage.setItem('vocab-data-v2', JSON.stringify(words));
+            updateUI();
+            alert("Added!");
+        }
+
+        function deleteWord(t) {
+            words = words.filter(w => w.t !== t);
+            localStorage.setItem('vocab-data-v2', JSON.stringify(words));
+            updateUI();
+        }
+
+        function resetData() {
+            if (confirm("Delete everything?")) {
+                words = [];
+                localStorage.clear();
+                updateUI();
+            }
+        }
+
+        // Запуск
+        updateUI();
+    </script>
+</body>
+</html>
