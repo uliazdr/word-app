@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Тренер Диктантов</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f0f9ff; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
+        .card { background: white; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .btn { transition: transform 0.1s; cursor: pointer; }
+        .btn:active { transform: scale(0.95); }
+    </style>
+</head>
+<body class="p-4">
+    <div id="app" class="max-w-md mx-auto">
+        <h1 class="text-2xl font-bold text-center text-blue-600 mb-6">Словарный Тренер</h1>
+
+        <div id="menu" class="space-y-4">
+            <button onclick="startDictation()" class="w-full py-6 bg-green-400 text-white rounded-2xl text-xl font-bold shadow-lg btn">Начать диктант</button>
+            <button onclick="showSettings()" class="w-full py-4 bg-white text-blue-500 rounded-2xl border-2 border-blue-100 font-semibold btn">Настройки и Слова</button>
+            <div id="stats" class="text-center text-gray-500 text-sm mt-4"></div>
+        </div>
+
+        <div id="dictation" class="hidden space-y-6 text-center">
+            <div class="card p-10">
+                <div id="word-display" class="text-4xl font-bold text-gray-800 mb-4">Слово</div>
+                <button id="reveal-btn" onclick="revealWord()" class="text-blue-400 underline">Показать слово</button>
+            </div>
+            <div class="flex gap-4">
+                <button onclick="markWord('error')" class="flex-1 py-6 bg-red-100 text-red-600 rounded-2xl font-bold border-2 border-red-200 btn">Ошибка</button>
+                <button onclick="markWord('easy')" class="flex-1 py-6 bg-blue-100 text-blue-600 rounded-2xl font-bold border-2 border-blue-200 btn">Легко</button>
+            </div>
+            <button onclick="stopDictation()" class="text-gray-400">Прервать</button>
+        </div>
+
+        <div id="settings" class="hidden space-y-4">
+            <div class="card p-4">
+                <h2 class="font-bold mb-2">Добавить много слов</h2>
+                <textarea id="mass-input" class="w-full p-3 border rounded-xl h-24 mb-2" placeholder="Вставьте слова через запятую или пробел..."></textarea>
+                <button onclick="importWords()" class="w-full py-2 bg-blue-500 text-white rounded-xl font-semibold btn">Добавить в базу</button>
+            </div>
+            <div class="card p-4">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="font-bold">Список слов (<span id="word-count">0</span>)</h2>
+                    <button onclick="clearAll()" class="text-red-400 text-xs">Очистить всё</button>
+                </div>
+                <div id="word-list" class="max-h-60 overflow-y-auto space-y-1 text-sm"></div>
+            </div>
+            <button onclick="showMenu()" class="w-full py-3 bg-gray-200 rounded-xl btn">Назад</button>
+        </div>
+    </div>
+
+    <script>
+        let words = JSON.parse(localStorage.getItem('dictation-words') || '[]');
+        let currentSession = [];
+        let currentIndex = 0;
+
+        function save() {
+            localStorage.setItem('dictation-words', JSON.stringify(words));
+            updateWordList();
+        }
+
+        function showMenu() {
+            document.getElementById('menu').classList.remove('hidden');
+            document.getElementById('dictation').classList.add('hidden');
+            document.getElementById('settings').classList.add('hidden');
+            updateStats();
+        }
+
+        function showSettings() {
+            document.getElementById('menu').classList.add('hidden');
+            document.getElementById('settings').classList.remove('hidden');
+            updateWordList();
+        }
+
+        function importWords() {
+            const input = document.getElementById('mass-input').value;
+            const newWords = input.split(/[, \n]+/).filter(w => w.trim() !== "");
+            newWords.forEach(w => {
+                if (!words.find(item => item.text === w)) {
+                    words.push({ text: w, weight: 5 });
+                }
+            });
+            document.getElementById('mass-input').value = "";
+            save();
+            alert('Слова добавлены!');
+        }
+
+        function updateWordList() {
+            const list = document.getElementById('word-list');
+            document.getElementById('word-count').innerText = words.length;
+            list.innerHTML = words.map((w, i) => `
+                <div class="flex justify-between p-2 bg-gray-50 rounded">
+                    <span>${w.text} ${w.weight > 5 ? '⚠️' : ''}</span>
+                    <button onclick="removeWord(${i})" class="text-red-300">×</button>
+                </div>
+            `).join('');
+        }
+
+        function removeWord(index) {
+            words.splice(index, 1);
+            save();
+        }
+
+        function clearAll() {
+            if(confirm('Точно удалить все слова?')) { words = []; save(); }
+        }
+
+        function startDictation() {
+            if (words.length < 1) return alert('Сначала добавьте слова в настройках!');
+            
+            // Логика выбора: сортируем по весу (ошибкам) и берем топ
+            let sorted = [...words].sort((a, b) => b.weight - a.weight + (Math.random() - 0.5) * 2);
+            currentSession = sorted.slice(0, 10);
+            currentIndex = 0;
+            
+            document.getElementById('menu').classList.add('hidden');
+            document.getElementById('dictation').classList.remove('hidden');
+            nextWord();
+        }
+
+        function nextWord() {
+            if (currentIndex >= currentSession.length) {
+                alert('Диктант окончен! Отлично поработали.');
+                showMenu();
+                return;
+            }
+            const wordObj = currentSession[currentIndex];
+            const display = document.getElementById('word-display');
+            display.innerText = wordObj.text;
+            display.classList.add('filter', 'blur-lg');
+            document.getElementById('reveal-btn').classList.remove('hidden');
+        }
+
+        function revealWord() {
+            document.getElementById('word-display').classList.remove('blur-lg');
+            document.getElementById('reveal-btn').classList.add('hidden');
+        }
+
+        function markWord(type) {
+            const wordText = currentSession[currentIndex].text;
+            const wordIdx = words.findIndex(w => w.text === wordText);
+            
+            if (type === 'error') {
+                words[wordIdx].weight += 5; // Увеличиваем приоритет
+            } else {
+                words[wordIdx].weight = Math.max(1, words[wordIdx].weight - 2); // Снижаем
+            }
+            
+            save();
+            currentIndex++;
+            nextWord();
+        }
+
+        function stopDictation() { showMenu(); }
+        
+        function updateStats() {
+            const difficult = words.filter(w => w.weight > 5).length;
+            document.getElementById('stats').innerText = `Всего слов: ${words.length} | Сложных слов: ${difficult}`;
+        }
+
+        updateStats();
+    </script>
+</body>
+</html>
