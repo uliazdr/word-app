@@ -8,179 +8,165 @@
     <style>
         body { background-color: #f0f9ff; font-family: -apple-system, system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
         .card { background: white; border-radius: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .btn { transition: all 0.1s ease; cursor: pointer; border-radius: 18px; font-weight: 600; text-align: center; display: flex; align-items: center; justify-content: center; }
-        .btn:active { transform: scale(0.95); opacity: 0.8; }
+        .btn { transition: all 0.1s ease; cursor: pointer; border-radius: 18px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+        .btn:active { transform: scale(0.95); opacity: 0.9; }
         .btn-cyan { background-color: #06b6d4; color: white; }
         .btn-light { background-color: #e0f7fa; color: #0891b2; border: 2px solid #a5f3fc; }
-        .btn-success { background-color: #22d3ee; color: white; }
-        .btn-error { background-color: #fee2e2; color: #b91c1c; border: 2px solid #fecaca; }
-        #word-display { transition: filter 0.3s ease; line-height: 1.2; }
-        .blur-active { filter: blur(25px); }
+        .btn-check { background-color: #dcfce7; color: #166534; border: 2px solid #bbf7d0; }
+        .btn-cross { background-color: #fee2e2; color: #991b1b; border: 2px solid #fecaca; }
+        .selected-check { background-color: #22c55e !important; color: white !important; }
+        .selected-cross { background-color: #ef4444 !important; color: white !important; }
+        
+        /* Аниме котик (SVG анимация) */
+        .cat-container { width: 120px; height: 120px; margin: 0 auto; position: relative; }
     </style>
 </head>
-<body class="p-4 pt-10">
+<body class="p-4 pt-6">
     <div id="app" class="max-w-md mx-auto">
         
-        <div id="menu-screen" class="space-y-10">
-            <header class="text-center">
+        <div id="screen-menu" class="space-y-8">
+            <header class="text-center pt-6">
                 <h1 class="text-4xl font-black text-cyan-600 tracking-tight">Vocab<span class="text-blue-500">Trainer</span></h1>
-                <p class="text-cyan-800 opacity-60 font-medium">Smart practice for kids</p>
+                <p class="text-cyan-800 opacity-50 font-medium">Ready for today's challenge?</p>
             </header>
-            
             <div class="space-y-4">
-                <button onclick="startSession()" class="w-full h-24 btn btn-cyan text-2xl shadow-lg shadow-cyan-100">Start Practice</button>
-                <button onclick="openSettings()" class="w-full h-14 btn btn-light">Word List & Import</button>
+                <button onclick="prepareSession()" class="w-full h-24 btn btn-cyan text-2xl shadow-lg shadow-cyan-100">Start Practice</button>
+                <button onclick="showScreen('screen-settings')" class="w-full h-14 btn btn-light">Settings & Words</button>
             </div>
-            
-            <div id="stats-box" class="card p-5 text-center text-cyan-700 bg-cyan-50/50 text-sm font-semibold"></div>
+            <div id="menu-stats" class="card p-4 text-center text-cyan-700 bg-cyan-50/30 text-xs font-bold uppercase tracking-widest"></div>
         </div>
 
-        <div id="dictation-screen" class="hidden space-y-8">
-            <div class="card p-12 min-h-[250px] flex flex-col justify-center items-center border-2 border-cyan-50 relative">
-                <div id="word-text" class="text-4xl font-bold text-gray-800 text-center blur-active">Word</div>
-                <button id="show-btn" onclick="unblur()" class="mt-6 text-cyan-500 font-bold uppercase text-xs tracking-widest bg-cyan-50 px-4 py-2 rounded-full">Tap to reveal</button>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <button onclick="handleResult('wrong')" class="h-20 btn btn-error text-lg">Mistake</button>
-                <button onclick="handleResult('right')" class="h-20 btn btn-success text-lg">Easy</button>
-            </div>
-            
-            <button onclick="goToMenu()" class="w-full text-gray-400 font-bold text-sm">Finish Session</button>
+        <div id="screen-preview" class="hidden space-y-6">
+            <h2 class="text-2xl font-bold text-gray-800 text-center">Today's Words</h2>
+            <div id="preview-list" class="card p-6 space-y-2 text-lg font-medium text-cyan-900"></div>
+            <button onclick="startDictation()" class="w-full h-16 btn btn-cyan text-xl shadow-md">Ready, Let's Go!</button>
         </div>
 
-        <div id="settings-screen" class="hidden space-y-6">
-            <div class="card p-6">
-                <h2 class="text-xl font-bold mb-4">Bulk Import</h2>
-                <textarea id="import-area" class="w-full p-4 border-2 border-cyan-100 rounded-2xl h-32 focus:outline-none focus:border-cyan-400 text-base" placeholder="Paste words here..."></button></textarea>
-                <button onclick="doImport()" class="w-full h-12 mt-3 btn btn-cyan">Add Words</button>
+        <div id="screen-dictation" class="hidden space-y-10 text-center">
+            <div class="card p-16 border-2 border-cyan-100">
+                <div id="active-word" class="text-5xl font-bold text-gray-900">Word</div>
+                <div id="word-counter" class="mt-4 text-cyan-400 font-bold text-sm">1 / 10</div>
             </div>
-            
+            <button onclick="nextWord()" class="w-full h-20 btn btn-cyan text-xl shadow-lg">Next Word →</button>
+        </div>
+
+        <div id="screen-review" class="hidden space-y-6">
+            <h2 class="text-2xl font-bold text-gray-800 text-center">Check Results</h2>
+            <div id="review-list" class="space-y-3"></div>
+            <button id="finish-btn" onclick="showResults()" class="w-full h-16 btn btn-cyan text-xl opacity-50" disabled>Finish & Save</button>
+        </div>
+
+        <div id="screen-result" class="hidden space-y-8 text-center pt-10">
+            <div class="cat-container">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="55" r="35" fill="#fff" stroke="#06b6d4" stroke-width="3"/>
+                    <path d="M25 35 L15 10 L40 25" fill="#fff" stroke="#06b6d4" stroke-width="3"/>
+                    <path d="M75 35 L85 10 L60 25" fill="#fff" stroke="#06b6d4" stroke-width="3"/>
+                    <circle cx="35" cy="50" r="3" fill="#333"/>
+                    <circle cx="65" cy="50" r="3" fill="#333"/>
+                    <path d="M45 65 Q50 70 55 65" fill="none" stroke="#333" stroke-width="2"/>
+                    <circle cx="30" cy="60" r="5" fill="#ffcfdf" opacity="0.6"/>
+                    <circle cx="70" cy="60" r="5" fill="#ffcfdf" opacity="0.6"/>
+                </svg>
+            </div>
+            <div>
+                <div id="final-score" class="text-6xl font-black text-cyan-600">8/10</div>
+                <p class="text-2xl font-bold text-gray-700 mt-2">Well done!<br>See you tomorrow!</p>
+            </div>
+            <button onclick="showScreen('screen-menu')" class="w-full h-16 btn btn-light">Back to Home</button>
+        </div>
+
+        <div id="screen-settings" class="hidden space-y-6">
             <div class="card p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold">My List (<span id="total-count">0</span>)</h2>
-                    <button onclick="resetData()" class="text-red-400 text-xs font-bold uppercase">Reset</button>
+                <h2 class="font-bold mb-3">Bulk Import</h2>
+                <textarea id="import-input" class="w-full p-4 border-2 border-cyan-50 rounded-2xl h-32 focus:outline-none focus:border-cyan-300" placeholder="apple, banana, orange..."></textarea>
+                <button onclick="importData()" class="w-full h-12 mt-3 btn btn-cyan">Add Words</button>
+            </div>
+            <div class="card p-6">
+                <div class="flex justify-between mb-4">
+                    <h2 class="font-bold">Words (<span id="count-label">0</span>)</h2>
+                    <button onclick="clearData()" class="text-red-400 text-xs font-bold">Clear All</button>
                 </div>
-                <div id="words-container" class="max-h-64 overflow-y-auto space-y-2"></div>
+                <div id="words-list" class="max-h-60 overflow-y-auto space-y-2 text-sm"></div>
             </div>
-            
-            <button onclick="goToMenu()" class="w-full h-14 bg-gray-100 text-gray-600 btn">Back to Menu</button>
+            <button onclick="showScreen('screen-menu')" class="w-full h-14 btn btn-light">Back</button>
         </div>
+
     </div>
 
     <script>
-        // Инициализация данных
-        let words = [];
-        try {
-            const saved = localStorage.getItem('vocab-data-v2');
-            words = saved ? JSON.parse(saved) : [];
-        } catch(e) { console.error("Data error", e); words = []; }
+        let allWords = JSON.parse(localStorage.getItem('vocab-v3') || '[]');
+        let sessionData = [];
+        let currentIdx = 0;
+        let marks = {}; // To store results during review
 
-        let sessionWords = [];
-        let sessionIndex = 0;
-
-        function updateUI() {
-            const diffCount = words.filter(w => w.w > 5).length;
-            document.getElementById('stats-box').innerHTML = `WORDS: ${words.length} &nbsp; | &nbsp; NEEDS REVIEW: ${diffCount}`;
-            document.getElementById('total-count').innerText = words.length;
-            renderList();
+        function showScreen(id) {
+            document.querySelectorAll('#app > div').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            if(id === 'screen-menu') updateStats();
         }
 
-        function renderList() {
-            const container = document.getElementById('words-container');
-            if (words.length === 0) {
-                container.innerHTML = '<p class="text-gray-400 text-center py-4">List is empty</p>';
-                return;
+        function updateStats() {
+            const needsWork = allWords.filter(w => w.w > 5).length;
+            document.getElementById('menu-stats').innerHTML = `Total: ${allWords.length} | Hard: ${needsWork}`;
+        }
+
+        // --- SESSION FLOW ---
+
+        function prepareSession() {
+            if (allWords.length < 2) return alert("Add at least 2 words in settings!");
+            // Smart select 10 words
+            sessionData = [...allWords]
+                .sort((a,b) => (b.w + Math.random()*15) - (a.w + Math.random()*15))
+                .slice(0, 10);
+            
+            const list = document.getElementById('preview-list');
+            list.innerHTML = sessionData.map((w, i) => `<div>${i+1}. ${w.t}</div>`).join('');
+            showScreen('screen-preview');
+        }
+
+        function startDictation() {
+            currentIdx = 0;
+            marks = {};
+            showScreen('screen-dictation');
+            updateDictationWord();
+        }
+
+        function updateDictationWord() {
+            document.getElementById('active-word').innerText = sessionData[currentIdx].t;
+            document.getElementById('word-counter').innerText = `${currentIdx + 1} / ${sessionData.length}`;
+        }
+
+        function nextWord() {
+            currentIdx++;
+            if (currentIdx < sessionData.length) {
+                updateDictationWord();
+            } else {
+                startReview();
             }
-            container.innerHTML = [...words].sort((a,b) => b.w - a.w).map(w => `
-                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
-                    <span class="font-medium">${w.t} ${w.w > 5 ? '⚠️' : ''}</span>
-                    <button onclick="deleteWord('${w.t}')" class="text-red-300 px-2 text-xl">×</button>
+        }
+
+        function startReview() {
+            const container = document.getElementById('review-list');
+            container.innerHTML = sessionData.map((w, i) => `
+                <div class="card p-4 flex items-center justify-between">
+                    <span class="text-lg font-bold text-gray-700">${w.t}</span>
+                    <div class="flex gap-2">
+                        <button id="check-${i}" onclick="setMark(${i}, true)" class="w-12 h-12 btn btn-check text-xl">✅</button>
+                        <button id="cross-${i}" onclick="setMark(${i}, false)" class="w-12 h-12 btn btn-cross text-xl">❌</button>
+                    </div>
                 </div>
             `).join('');
+            showScreen('screen-review');
+            document.getElementById('finish-btn').disabled = true;
+            document.getElementById('finish-btn').classList.add('opacity-50');
         }
 
-        function goToMenu() {
-            document.getElementById('menu-screen').style.display = 'block';
-            document.getElementById('dictation-screen').style.display = 'none';
-            document.getElementById('settings-screen').style.display = 'none';
-            updateUI();
-        }
-
-        function openSettings() {
-            document.getElementById('menu-screen').style.display = 'none';
-            document.getElementById('settings-screen').style.display = 'block';
-            updateUI();
-        }
-
-        function startSession() {
-            if (words.length < 2) return alert("Add more words first!");
-            // Умная сортировка по весу (ошибкам)
-            sessionWords = [...words].sort((a,b) => (b.w + Math.random()*10) - (a.w + Math.random()*10)).slice(0, 10);
-            sessionIndex = 0;
-            document.getElementById('menu-screen').style.display = 'none';
-            document.getElementById('dictation-screen').style.display = 'block';
-            showWord();
-        }
-
-        function showWord() {
-            if (sessionIndex >= sessionWords.length) {
-                alert("Session Complete!");
-                return goToMenu();
-            }
-            const wordObj = sessionWords[sessionIndex];
-            const el = document.getElementById('word-text');
-            el.innerText = wordObj.t;
-            el.classList.add('blur-active');
-            document.getElementById('show-btn').style.display = 'block';
-        }
-
-        function unblur() {
-            document.getElementById('word-text').classList.remove('blur-active');
-            document.getElementById('show-btn').style.display = 'none';
-        }
-
-        function handleResult(res) {
-            const current = sessionWords[sessionIndex];
-            const idx = words.findIndex(w => w.t === current.t);
-            if (idx !== -1) {
-                if (res === 'wrong') words[idx].w += 10;
-                else words[idx].w = Math.max(1, words[idx].w - 2);
-                localStorage.setItem('vocab-data-v2', JSON.stringify(words));
-            }
-            sessionIndex++;
-            showWord();
-        }
-
-        function doImport() {
-            const area = document.getElementById('import-area');
-            const newOnes = area.value.split(/[, \n]+/).filter(x => x.trim().length > 0);
-            newOnes.forEach(txt => {
-                const t = txt.trim();
-                if (!words.find(w => w.t === t)) words.push({t: t, w: 5});
-            });
-            area.value = "";
-            localStorage.setItem('vocab-data-v2', JSON.stringify(words));
-            updateUI();
-            alert("Added!");
-        }
-
-        function deleteWord(t) {
-            words = words.filter(w => w.t !== t);
-            localStorage.setItem('vocab-data-v2', JSON.stringify(words));
-            updateUI();
-        }
-
-        function resetData() {
-            if (confirm("Delete everything?")) {
-                words = [];
-                localStorage.clear();
-                updateUI();
-            }
-        }
-
-        // Запуск
-        updateUI();
-    </script>
-</body>
-</html>
+        function setMark(idx, isCorrect) {
+            marks[idx] = isCorrect;
+            
+            // UI Update for buttons
+            document.getElementById(`check-${idx}`).className = `w-12 h-12 btn btn-check text-xl ${isCorrect ? 'selected-check' : ''}`;
+            document.getElementById(`cross-${idx}`).className = `w-12 h-12 btn btn-cross text-xl ${!isCorrect ? 'selected-cross' : ''}`;
+            
+            // Enable finish button if all are marked
