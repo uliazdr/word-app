@@ -5,15 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vocab Trainer</title>
 <script src="https://cdn.tailwindcss.com"></script>
-
-<!-- Firebase compat -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-body{background:#f0faff;}
-.screen{display:none;}
-.screen.active{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:75vh;text-align:center;}
+body{background:#f0faff;margin:0;padding:0;font-family:sans-serif;}
+.screen{display:none;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:75vh;}
+.screen.active{display:flex;}
 textarea{resize:none;}
 button{cursor:pointer;}
 </style>
@@ -25,19 +23,20 @@ button{cursor:pointer;}
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#06b6d4">
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="flex items-center justify-center min-h-screen p-4">
 <div class="w-full max-w-md bg-white rounded-[24px] shadow-xl p-6">
 
 <!-- MENU -->
-<div id="menu" class="screen active flex-col items-center">
+<div id="menu" class="screen active">
   <h1 class="text-2xl font-bold text-blue-500 mb-4">Vocab Trainer</h1>
   <button id="startPractice" class="mb-2 w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Start Practice</button>
   <button id="manageWords" class="mb-2 w-full py-2 px-4 rounded-xl bg-blue-500 text-white active:scale-95 transition">Manage Word List</button>
-  <div class="mt-4 text-center text-sm text-gray-600">Total Words: <span id="totalWords">0</span> | Hard Words: <span id="hardWords">0</span></div>
+  <button id="showProgress" class="mb-2 w-full py-2 px-4 rounded-xl bg-teal-500 text-white active:scale-95 transition">📊 Progress</button>
+  <div class="mt-4 text-sm text-gray-600">Total Words: <span id="totalWords">0</span> | Hard Words: <span id="hardWords">0</span></div>
 </div>
 
 <!-- MANAGE WORDS -->
-<div id="manage" class="screen flex-col items-center">
+<div id="manage" class="screen">
   <textarea id="bulkWords" class="w-full h-32 p-2 border rounded-lg mb-2" placeholder="Add words, comma or newline separated"></textarea>
   <button id="importWords" class="mb-2 w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Save & Add</button>
   <div id="wordList" class="w-full max-h-48 overflow-y-auto mb-2"></div>
@@ -45,38 +44,44 @@ button{cursor:pointer;}
 </div>
 
 <!-- PREVIEW -->
-<div id="preview" class="screen flex-col items-center">
+<div id="preview" class="screen">
   <h2 class="text-xl font-bold text-blue-500 mb-2">Preview Words</h2>
   <div id="previewList" class="w-full mb-2"></div>
   <button id="beginDictation" class="w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Begin Dictation</button>
 </div>
 
 <!-- DICTATION -->
-<div id="dictation" class="screen flex-col items-center">
+<div id="dictation" class="screen">
   <div id="dictWord" class="text-3xl font-bold text-blue-600 mb-4"></div>
   <button id="nextWord" class="w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Next</button>
 </div>
 
 <!-- REVIEW -->
-<div id="review" class="screen flex-col items-center">
+<div id="review" class="screen">
   <div id="reviewList" class="w-full mb-2"></div>
   <button id="finish" class="w-full py-2 px-4 rounded-xl bg-blue-500 text-white opacity-50" disabled>Save & Finish</button>
 </div>
 
 <!-- RESULTS -->
-<div id="results" class="screen flex-col items-center">
+<div id="results" class="screen">
   <h2 id="score" class="text-xl font-bold text-blue-600 mb-2">Score: 0/10</h2>
   <div class="text-lg mb-2">Well done! See you tomorrow!</div>
   <img id="rewardImage" class="w-full h-64 object-contain" src="" alt="Reward"/>
   <button id="backHome" class="mt-2 w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Back to Menu</button>
 </div>
 
+<!-- PROGRESS -->
+<div id="progress" class="screen">
+  <h2 class="text-xl font-bold text-blue-500 mb-2">Progress Over Time</h2>
+  <div id="progressList" class="w-full max-h-64 overflow-y-auto mb-2"></div>
+  <button id="backFromProgress" class="w-full py-2 px-4 rounded-xl bg-blue-500 text-white active:scale-95 transition">Back to Menu</button>
+</div>
+
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", async ()=>{
+document.addEventListener("DOMContentLoaded", ()=>{
 
-  // Firebase init
   const firebaseConfig = {
     apiKey: "AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
     authDomain: "vocabtrainer-969fd.firebaseapp.com",
@@ -93,16 +98,19 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   const rewardImages = ["1.png","2.png","3.png","4.png","5.png"];
   const USER_ID="defaultUser";
 
-  // Load data
-  const snapshot = await firebase.database().ref("users/"+USER_ID).get();
-  if(snapshot.exists()){
-    const data = snapshot.val();
-    words = data.words || [];
-    history = data.history || [];
+  async function loadData(){
+    const snapshot = await firebase.database().ref("users/"+USER_ID).get();
+    if(snapshot.exists()){
+      const data = snapshot.val();
+      words = data.words || [];
+      history = data.history || [];
+    }
+    updateStats();
   }
 
   function saveData(){ 
     firebase.database().ref("users/"+USER_ID).set({words,history}); 
+    updateStats();
   }
 
   function updateStats(){
@@ -110,7 +118,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     let hard = words.filter(w=>w.interval>7).length;
     document.getElementById("hardWords").textContent = hard;
   }
-  updateStats();
 
   function show(id){
     document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
@@ -124,7 +131,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     return result.slice(0,10);
   }
 
-  // MENU
+  // MENU BUTTONS
   document.getElementById("startPractice").addEventListener("click",()=>{
     if(words.length===0) return alert("Add some words first!");
     practice = getPracticeWords();
@@ -139,6 +146,15 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     show("manage");
   });
 
+  document.getElementById("showProgress").addEventListener("click",()=>{
+    const list=document.getElementById("progressList");
+    list.innerHTML="";
+    history.forEach(h=>{
+      list.innerHTML+=`<div>Date: ${h.date}, Score: ${h.score}/10</div>`;
+    });
+    show("progress");
+  });
+
   // MANAGE WORDS
   function renderWordList(){
     const list = document.getElementById("wordList"); list.innerHTML="";
@@ -147,7 +163,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       row.className="flex justify-between mb-1";
       row.innerHTML=`<span>${w.text}</span><button class="text-red-500">✕</button>`;
       row.querySelector("button").addEventListener("click",()=>{
-        words.splice(i,1); saveData(); renderWordList(); updateStats();
+        words.splice(i,1); saveData(); renderWordList();
       });
       list.appendChild(row);
     });
@@ -159,10 +175,11 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       words.push({text:w, interval:1, ease:2.5, due:Math.floor(Date.now()/86400000)});
     });
     document.getElementById("bulkWords").value="";
-    saveData(); renderWordList(); updateStats();
+    saveData(); renderWordList();
   });
 
   document.getElementById("backMenu").addEventListener("click",()=>show("menu"));
+  document.getElementById("backFromProgress").addEventListener("click",()=>show("menu"));
 
   // DICTATION
   document.getElementById("beginDictation").addEventListener("click",()=>{
@@ -226,6 +243,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
 
   document.getElementById("backHome").addEventListener("click",()=>show("menu"));
 
+  loadData();
 });
 </script>
 </body>
