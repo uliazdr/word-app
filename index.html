@@ -82,6 +82,7 @@ button{cursor:pointer;}
 <script>
 document.addEventListener("DOMContentLoaded", ()=>{
 
+  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
     authDomain: "vocabtrainer-969fd.firebaseapp.com",
@@ -96,20 +97,18 @@ document.addEventListener("DOMContentLoaded", ()=>{
   let words = [], history = [];
   let practice = [], marks = {}, current = 0;
   const rewardImages = ["1.png","2.png","3.png","4.png","5.png"];
-  const USER_ID="defaultUser";
 
   async function loadData(){
-    const snapshot = await firebase.database().ref("users/"+USER_ID).get();
-    if(snapshot.exists()){
-      const data = snapshot.val();
-      words = data.words || [];
-      history = data.history || [];
-    }
+    const snapshotWords = await firebase.database().ref("words").get();
+    const snapshotHistory = await firebase.database().ref("history").get();
+    if(snapshotWords.exists()) words = snapshotWords.val();
+    if(snapshotHistory.exists()) history = snapshotHistory.val();
     updateStats();
   }
 
   function saveData(){ 
-    firebase.database().ref("users/"+USER_ID).set({words,history}); 
+    firebase.database().ref("words").set(words);
+    firebase.database().ref("history").set(history);
     updateStats();
   }
 
