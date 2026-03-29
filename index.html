@@ -13,8 +13,9 @@
 <style>
 body{background:#f0faff;}
 .screen{display:none;}
-.screen.active{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:75vh;}
+.screen.active{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:75vh;text-align:center;}
 textarea{resize:none;}
+button{cursor:pointer;}
 </style>
 
 <link rel="manifest" href="manifest.json">
@@ -24,7 +25,6 @@ textarea{resize:none;}
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#06b6d4">
 </head>
-
 <body class="min-h-screen flex items-center justify-center p-4">
 <div class="w-full max-w-md bg-white rounded-[24px] shadow-xl p-6">
 
@@ -33,7 +33,6 @@ textarea{resize:none;}
   <h1 class="text-2xl font-bold text-blue-500 mb-4">Vocab Trainer</h1>
   <button id="startPractice" class="mb-2 w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Start Practice</button>
   <button id="manageWords" class="mb-2 w-full py-2 px-4 rounded-xl bg-blue-500 text-white active:scale-95 transition">Manage Word List</button>
-  <button id="showStats" class="w-full py-2 px-4 rounded-xl bg-cyan-600 text-white active:scale-95 transition">Progress</button>
   <div class="mt-4 text-center text-sm text-gray-600">Total Words: <span id="totalWords">0</span> | Hard Words: <span id="hardWords">0</span></div>
 </div>
 
@@ -72,17 +71,23 @@ textarea{resize:none;}
   <button id="backHome" class="mt-2 w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Back to Menu</button>
 </div>
 
-<!-- STATS -->
-<div id="stats" class="screen flex-col items-center">
-  <canvas id="chart" width="300" height="150" class="border rounded-lg mb-2"></canvas>
-  <button id="statsBack" class="w-full py-2 px-4 rounded-xl bg-blue-500 text-white active:scale-95 transition">Back to Menu</button>
 </div>
 
-</div>
-
-<!-- SCRIPT в самом низу body -->
 <script>
 document.addEventListener("DOMContentLoaded", async ()=>{
+
+  // Firebase init
+  const firebaseConfig = {
+    apiKey: "AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
+    authDomain: "vocabtrainer-969fd.firebaseapp.com",
+    databaseURL: "https://vocabtrainer-969fd-default-rtdb.firebaseio.com",
+    projectId: "vocabtrainer-969fd",
+    storageBucket: "vocabtrainer-969fd.appspot.com",
+    messagingSenderId: "991443793775",
+    appId: "1:991443793775:web:0d044609e2b3eb4e611a9a"
+  };
+  firebase.initializeApp(firebaseConfig);
+
   let words = [], history = [];
   let practice = [], marks = {}, current = 0;
   const rewardImages = ["1.png","2.png","3.png","4.png","5.png"];
@@ -132,11 +137,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   document.getElementById("manageWords").addEventListener("click",()=>{
     renderWordList();
     show("manage");
-  });
-
-  document.getElementById("showStats").addEventListener("click",()=>{
-    drawChart();
-    show("stats");
   });
 
   // MANAGE WORDS
@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       w.due=Math.floor(Date.now()/86400000)+w.interval;
     });
     history.push({date:Math.floor(Date.now()/86400000),score}); if(history.length>30) history.shift();
-    saveData(); updateStats();
+    saveData();
     document.getElementById("score").textContent=`Score: ${score}/10`;
     document.getElementById("rewardImage").src=rewardImages[Math.floor(Math.random()*rewardImages.length)];
     show("results");
@@ -226,18 +226,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
 
   document.getElementById("backHome").addEventListener("click",()=>show("menu"));
 
-  // STATS
-  function drawChart(){
-    const canvas=document.getElementById("chart");
-    const ctx=canvas.getContext("2d"); ctx.clearRect(0,0,canvas.width,canvas.height);
-    const w=canvas.width; const h=canvas.height; const max=10;
-    history.forEach((d,i)=>{
-      const x=i*(w/30); const bar=h*(d.score/max);
-      ctx.fillStyle="#06b6d4"; ctx.fillRect(x,h-bar,8,bar);
-    });
-  }
-
-  document.getElementById("statsBack").addEventListener("click",()=>show("menu"));
 });
 </script>
 </body>
