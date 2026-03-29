@@ -36,22 +36,8 @@ body{background:#f0faff;}
     <h2 class="text-xl font-bold text-blue-500">Manage Words</h2>
     <textarea id="wordInput" class="border p-2 w-full h-32 rounded-lg" placeholder="Add words, one per line"></textarea>
     <button id="saveWordsBtn" class="bg-cyan-500 hover:bg-cyan-600 text-white py-2 rounded-lg active:scale-95 transition">Save & Add</button>
-    <div id="wordList" class="overflow-y-auto max-h-48 mt-2"></div>
+    <div id="wordList" class="overflow-y-auto max-h-48 mt-2 w-full"></div>
     <button id="backFromManage" class="bg-gray-300 text-black py-2 rounded-lg active:scale-95 transition mt-2">Back</button>
-  </div>
-
-  <!-- Practice Placeholder -->
-  <div id="practiceScreen" class="screen flex flex-col gap-4 w-full">
-    <h2 class="text-xl font-bold text-blue-500">Practice</h2>
-    <div id="practiceWord" class="text-3xl font-bold text-center my-4"></div>
-    <button id="nextWordBtn" class="bg-cyan-500 hover:bg-cyan-600 text-white py-3 rounded-lg active:scale-95 transition">Next</button>
-  </div>
-
-  <!-- Review Placeholder -->
-  <div id="reviewScreen" class="screen flex flex-col gap-4 w-full">
-    <h2 class="text-xl font-bold text-blue-500">Review</h2>
-    <div id="reviewList" class="w-full"></div>
-    <button id="finishReviewBtn" class="bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg active:scale-95 transition mt-2" disabled>Finish</button>
   </div>
 
   <!-- Progress Placeholder -->
@@ -80,8 +66,6 @@ const db = firebase.database();
 // Screens
 const startScreen = document.getElementById("startScreen");
 const manageScreen = document.getElementById("manageScreen");
-const practiceScreen = document.getElementById("practiceScreen");
-const reviewScreen = document.getElementById("reviewScreen");
 const progressScreen = document.getElementById("progressScreen");
 
 // Buttons
@@ -133,17 +117,28 @@ function loadWords(){
 }
 
 // Save words
-saveWordsBtn.addEventListener('click', ()=>{
+saveWordsBtn.addEventListener('click', function() {
   const lines = wordInput.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-  if(lines.length===0) return;
-  db.ref('words').once('value', snapshot=>{
+  if(lines.length === 0){
+    alert("Please enter at least one word");
+    return;
+  }
+  db.ref('words').once('value', snapshot => {
     const data = snapshot.val() || [];
-    lines.forEach(t=>{
-      data.push({text:t, interval:1, ease:2.5, due:Math.floor(Date.now()/86400000)});
+    lines.forEach(t => {
+      if(!data.some(w=>w.text===t)){
+        data.push({text: t, interval:1, ease:2.5, due: Math.floor(Date.now()/86400000)});
+      }
     });
-    db.ref('words').set(data);
-    wordInput.value='';
-    loadWords();
+    db.ref('words').set(data, err=>{
+      if(err){
+        alert("Error saving words: "+err);
+      } else {
+        wordInput.value = '';
+        loadWords();
+        alert("Words added successfully!");
+      }
+    });
   });
 });
 
@@ -153,6 +148,9 @@ manageWordsBtn.addEventListener('click', ()=>{ showScreen(manageScreen); loadWor
 showProgressBtn.addEventListener('click', ()=>{ showScreen(progressScreen); });
 backFromManage.addEventListener('click', ()=>showScreen(startScreen));
 backFromProgress.addEventListener('click', ()=>showScreen(startScreen));
+
+// Load initial
+loadWords();
 </script>
 </body>
 </html>
