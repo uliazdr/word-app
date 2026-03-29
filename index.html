@@ -10,23 +10,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-<script>
-  // Firebase конфиг
-  const firebaseConfig = {
-    apiKey: "AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
-    authDomain: "vocabtrainer-969fd.firebaseapp.com",
-    projectId: "vocabtrainer-969fd",
-    storageBucket: "vocabtrainer-969fd.firebasestorage.app",
-    messagingSenderId: "991443793775",
-    appId: "1:991443793775:web:0d044609e2b3eb4e611a9a",
-    databaseURL: "https://vocabtrainer-969fd-default-rtdb.firebaseio.com"
-  };
-
-  // Инициализация Firebase
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-</script>
-
 <style>
 body{background:#f0faff;}
 .screen{display:none;}
@@ -95,6 +78,9 @@ textarea{resize:none;}
   <button id="statsBack" class="w-full py-2 px-4 rounded-xl bg-blue-500 text-white active:scale-95 transition">Back to Menu</button>
 </div>
 
+</div>
+
+<!-- SCRIPT в самом низу body -->
 <script>
 document.addEventListener("DOMContentLoaded", async ()=>{
   let words = [], history = [];
@@ -254,6 +240,5 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   document.getElementById("statsBack").addEventListener("click",()=>show("menu"));
 });
 </script>
-</div>
 </body>
 </html>
