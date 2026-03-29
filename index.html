@@ -5,13 +5,38 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vocab Trainer</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<!-- Firebase модульный SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+  // Конфигурация Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
+    authDomain: "vocabtrainer-969fd.firebaseapp.com",
+    projectId: "vocabtrainer-969fd",
+    storageBucket: "vocabtrainer-969fd.firebasestorage.app",
+    messagingSenderId: "991443793775",
+    appId: "1:991443793775:web:0d044609e2b3eb4e611a9a",
+    databaseURL: "https://vocabtrainer-969fd-default-rtdb.firebaseio.com"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const USER_ID = "defaultUser";
+
+  // ---------------- App logic ----------------
+  import { onDOMContentLoaded } from "https://dummy"; // just placeholder for structure
+
+</script>
+
 <style>
 body{background:#f0faff;}
 .screen{display:none;}
-.screen.active{display:flex;flex-direction:column;justify-content:center;min-height:65vh;}
+.screen.active{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:65vh;}
 </style>
+
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#06b6d4">
 </head>
@@ -75,30 +100,17 @@ body{background:#f0faff;}
 <button id="statsBack" class="w-full mt-6 bg-gray-200 py-2 rounded-lg">Back</button>
 </div>
 
-</div>
+<script type="module">
+import { ref, set, get, child } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
-<script>
 document.addEventListener("DOMContentLoaded", async ()=>{
-// ------------------ FIREBASE ------------------
-const firebaseConfig = {
-  apiKey: "AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
-  authDomain: "vocabtrainer-969fd.firebaseapp.com",
-  projectId: "vocabtrainer-969fd",
-  storageBucket: "vocabtrainer-969fd.firebasestorage.app",
-  messagingSenderId: "991443793775",
-  appId: "1:991443793775:web:0d044609e2b3eb4e611a9a"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const USER_ID = 'defaultUser';
-// ------------------ END FIREBASE ------------------
 
 let words = [], history = [];
 let practice = [], marks = {}, current = 0;
 
 // ------------------ LOAD DATA ------------------
 async function loadData(){
-  const snapshot = await db.ref(`users/${USER_ID}`).get();
+  const snapshot = await get(child(ref(db), `users/${USER_ID}`));
   if(snapshot.exists()){
     const data = snapshot.val();
     words = data.words || [];
@@ -108,8 +120,8 @@ async function loadData(){
 }
 await loadData();
 
-function saveData(){
-  db.ref(`users/${USER_ID}`).set({words, history});
+async function saveData(){
+  await set(ref(db, `users/${USER_ID}`), {words, history});
 }
 
 // ------------------ STATS ------------------
@@ -162,17 +174,17 @@ function renderWordList(){
     let row=document.createElement("div");
     row.className="flex justify-between mb-1";
     row.innerHTML=`<span>${w.text}</span><button class="text-red-500">✕</button>`;
-    row.querySelector("button").addEventListener("click",()=>{
-      words.splice(i,1); saveData(); renderWordList(); updateStats();
+    row.querySelector("button").addEventListener("click",async ()=>{
+      words.splice(i,1); await saveData(); renderWordList(); updateStats();
     });
     list.appendChild(row);
   });
 }
-document.getElementById("importWords").addEventListener("click",()=>{
+document.getElementById("importWords").addEventListener("click",async ()=>{
   let text=document.getElementById("bulkWords").value;
   text.split(/[\n,]/).map(w=>w.trim()).filter(Boolean).forEach(w=>words.push({text:w,interval:1,ease:2.5,due:Math.floor(Date.now()/86400000)}));
   document.getElementById("bulkWords").value="";
-  saveData(); renderWordList(); updateStats();
+  await saveData(); renderWordList(); updateStats();
 });
 
 // ------------------ DICTATION ------------------
@@ -207,7 +219,7 @@ function checkFinish(){
     let btn=document.getElementById("finish"); btn.disabled=false; btn.classList.remove("opacity-50");
   }
 }
-document.getElementById("finish").addEventListener("click",()=>{
+document.getElementById("finish").addEventListener("click",async ()=>{
   let score=0;
   practice.forEach((w,i)=>{
     if(!w.interval)w.interval=1; if(!w.ease)w.ease=2.5;
@@ -217,7 +229,7 @@ document.getElementById("finish").addEventListener("click",()=>{
   });
   history.push({date:Math.floor(Date.now()/86400000),score:score});
   if(history.length>30)history.shift();
-  saveData(); updateStats();
+  await saveData(); updateStats();
   document.getElementById("score").textContent=`Score: ${score}/10`;
   let img=rewardImages[Math.floor(Math.random()*rewardImages.length)];
   document.getElementById("rewardImage").src=img;
@@ -235,7 +247,7 @@ function drawChart(){
 }
 document.getElementById("statsBack").addEventListener("click",()=>show("menu"));
 document.getElementById("backMenu").addEventListener("click",()=>show("menu"));
-});
+
 </script>
 
 <!-- SIMPLE PWA SERVICE WORKER -->
@@ -247,5 +259,6 @@ self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request))})
 `],{type:'text/javascript'}))
 }
 </script>
+
 </body>
 </html>
