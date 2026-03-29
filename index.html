@@ -12,16 +12,16 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <style>
-body{background:#f0faff}
-.screen{display:none}
-.screen.active{display:flex;flex-direction:column;justify-content:center;min-height:65vh}
+body{background:#f0faff;}
+.screen{display:none;}
+.screen.active{display:flex;flex-direction:column;justify-content:center;min-height:65vh;}
 </style>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#06b6d4">
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
 
+<body class="min-h-screen flex items-center justify-center p-4">
 <div class="w-full max-w-md bg-white rounded-[24px] shadow-xl p-6">
 
 <!-- MENU -->
@@ -105,22 +105,24 @@ const firebaseConfig = {
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.database();
 
-// Авторизация для единственного пользователя
-firebase.auth().signInWithEmailAndPassword("me@example.com","mypassword")
+// Sign in user
+auth.signInWithEmailAndPassword("zdorovilo.ulia@gmail.com","chuKcha67")
 .then(user=>{
   console.log("Signed in:",user.user.email)
   initApp()
 })
-.catch(err=>{
-  console.error(err.code,err.message)
-});
+.catch(err=>console.error(err.code,err.message));
 
 function initApp(){
 
+const rewardImages=["1.png","2.png","3.png","4.png","5.png"]
+
 function saveToFirebase(){
-  firebase.database().ref("words").set(words)
-  firebase.database().ref("history").set(history)
+  db.ref("words").set(words)
+  db.ref("history").set(history)
 }
 
 function saveLocal(){
@@ -144,15 +146,15 @@ function updateStats(){
 function getPracticeWords(){
   let due=words.filter(w=>!w.due || w.due<=today())
   let result=[...due]
-  while(result.length<10){
+  while(result.length<10 && words.length>0){
     result.push(words[Math.floor(Math.random()*words.length)])
   }
   return result.slice(0,10)
 }
 
 // Load from Firebase
-firebase.database().ref("words").once("value").then(snap=>{if(snap.val()) words=snap.val(); updateStats()})
-firebase.database().ref("history").once("value").then(snap=>{if(snap.val()) history=snap.val()})
+db.ref("words").once("value").then(snap=>{if(snap.val()) words=snap.val(); updateStats()})
+db.ref("history").once("value").then(snap=>{if(snap.val()) history=snap.val()})
 
 // START PRACTICE
 document.getElementById("startPractice").addEventListener("click",()=>{
@@ -190,8 +192,7 @@ function buildReview(){
     <div class="flex border rounded-lg overflow-hidden">
       <button class="good px-3 py-1 text-green-600">✓</button>
       <button class="bad px-3 py-1 text-red-600">✕</button>
-    </div>
-    `
+    </div>`
     const good=row.querySelector(".good")
     const bad=row.querySelector(".bad")
     good.addEventListener("click",()=>{
@@ -236,11 +237,8 @@ document.getElementById("finish").addEventListener("click",()=>{
   })
   history.push({date:today(),score:score})
   if(history.length>30)history.shift()
-  saveLocal()
-  saveToFirebase()
-  updateStats()
+  saveLocal(); saveToFirebase(); updateStats()
   document.getElementById("score").textContent=`Score: ${score}/10`
-  const rewardImages=["1.png","2.png","3.png","4.png","5.png"]
   let img=rewardImages[Math.floor(Math.random()*rewardImages.length)]
   document.getElementById("rewardImage").src=img
   show("results")
@@ -288,8 +286,7 @@ document.getElementById("statsBack").addEventListener("click",()=>show("menu"))
 document.getElementById("backMenu").addEventListener("click",()=>show("menu"))
 document.getElementById("backHome").addEventListener("click",()=>show("menu"))
 
-} // initApp
+})
 </script>
-
 </body>
 </html>
