@@ -4,28 +4,37 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vocab Trainer</title>
-<script src="https://cdn.tailwindcss.com"></script>
 
+<script src="https://cdn.tailwindcss.com"></script>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <style>
-body{background:#f0faff;}
-.screen{display:none;}
-.screen.active{display:flex;flex-direction:column;justify-content:center;min-height:65vh;}
+body{background:#f0faff}
+.screen{display:none}
+.screen.active{display:flex;flex-direction:column;justify-content:center;min-height:65vh}
 </style>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#06b6d4">
 </head>
-
 <body class="min-h-screen flex items-center justify-center p-4">
+
 <div class="w-full max-w-md bg-white rounded-[24px] shadow-xl p-6">
 
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="screen active text-center">
+<h1 class="text-2xl font-bold text-blue-600 mb-6">Vocab Trainer Login</h1>
+<input type="email" id="loginEmail" placeholder="Email" class="w-full border rounded-lg p-2 mb-3">
+<input type="password" id="loginPassword" placeholder="Password" class="w-full border rounded-lg p-2 mb-3">
+<button id="loginBtn" class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4 active:scale-95 transition">Login</button>
+<div id="loginError" class="text-red-500 text-sm"></div>
+</div>
+
 <!-- MENU -->
-<div id="menu" class="screen active text-center">
+<div id="menu" class="screen text-center">
 <h1 class="text-2xl font-bold text-blue-600 mb-6">Vocabulary Trainer</h1>
 <button id="startPractice" class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4 active:scale-95 transition">Start Practice</button>
 <button id="manageWords" class="w-full bg-blue-500 text-white py-3 rounded-xl mb-4 active:scale-95 transition">Manage Word List</button>
@@ -105,26 +114,28 @@ const firebaseConfig = {
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth();
-const db=firebase.database();
 
-// Sign in user
-auth.signInWithEmailAndPassword("zdorovilo.ulia@gmail.com","chuKcha67")
-.then(user=>{
-  console.log("Signed in:",user.user.email)
-  initApp()
+// Firebase Auth login
+document.getElementById("loginBtn").addEventListener("click",()=>{
+  const email=document.getElementById("loginEmail").value
+  const pass=document.getElementById("loginPassword").value
+  const errBox=document.getElementById("loginError")
+  errBox.textContent=""
+  firebase.auth().signInWithEmailAndPassword(email,pass)
+  .then(()=>{ loadData(); show("menu") })
+  .catch(err=>{ errBox.textContent=err.message })
 })
-.catch(err=>console.error(err.code,err.message));
 
-function initApp(){
-
-const rewardImages=["1.png","2.png","3.png","4.png","5.png"]
-
-function saveToFirebase(){
-  db.ref("words").set(words)
-  db.ref("history").set(history)
+function loadData(){
+  firebase.database().ref("words").once("value").then(snap=>{ if(snap.val()) words=snap.val(); updateStats(); renderWordList() })
+  firebase.database().ref("history").once("value").then(snap=>{ if(snap.val()) history=snap.val() })
 }
 
+// Save functions
+function saveToFirebase(){
+  firebase.database().ref("words").set(words)
+  firebase.database().ref("history").set(history)
+}
 function saveLocal(){
   localStorage.setItem("words",JSON.stringify(words))
   localStorage.setItem("history",JSON.stringify(history))
@@ -143,18 +154,13 @@ function updateStats(){
   document.getElementById("hardWords").textContent=hard
 }
 
+// Practice
 function getPracticeWords(){
   let due=words.filter(w=>!w.due || w.due<=today())
   let result=[...due]
-  while(result.length<10 && words.length>0){
-    result.push(words[Math.floor(Math.random()*words.length)])
-  }
+  while(result.length<10){ result.push(words[Math.floor(Math.random()*words.length)]) }
   return result.slice(0,10)
 }
-
-// Load from Firebase
-db.ref("words").once("value").then(snap=>{if(snap.val()) words=snap.val(); updateStats()})
-db.ref("history").once("value").then(snap=>{if(snap.val()) history=snap.val()})
 
 // START PRACTICE
 document.getElementById("startPractice").addEventListener("click",()=>{
@@ -237,15 +243,17 @@ document.getElementById("finish").addEventListener("click",()=>{
   })
   history.push({date:today(),score:score})
   if(history.length>30)history.shift()
-  saveLocal(); saveToFirebase(); updateStats()
+  saveLocal(); saveToFirebase()
+  updateStats()
   document.getElementById("score").textContent=`Score: ${score}/10`
+  const rewardImages=["1.png","2.png","3.png","4.png","5.png"]
   let img=rewardImages[Math.floor(Math.random()*rewardImages.length)]
   document.getElementById("rewardImage").src=img
   show("results")
 })
 
 // WORD MANAGEMENT
-document.getElementById("manageWords").addEventListener("click",()=>{renderWordList(); show("manage")})
+document.getElementById("manageWords").addEventListener("click",()=>{ renderWordList(); show("manage") })
 function renderWordList(){
   let list=document.getElementById("wordList")
   list.innerHTML=""
@@ -288,5 +296,6 @@ document.getElementById("backHome").addEventListener("click",()=>show("menu"))
 
 })
 </script>
+
 </body>
 </html>
