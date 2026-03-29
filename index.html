@@ -11,7 +11,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
-// Конфиг Firebase
+// Firebase конфиг
 const firebaseConfig = {
   apiKey: "AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
   authDomain: "vocabtrainer-969fd.firebaseapp.com",
@@ -22,7 +22,7 @@ const firebaseConfig = {
   databaseURL: "https://vocabtrainer-969fd-default-rtdb.firebaseio.com"
 };
 
-// Инициализация
+// Инициализация Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const USER_ID = "defaultUser";
@@ -31,7 +31,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   let words = [], history = [];
   let practice = [], marks = {}, current = 0;
 
-  // ------------------ LOAD DATA ------------------
   async function loadData(){
     const snapshot = await get(child(ref(db), `users/${USER_ID}`));
     if(snapshot.exists()){
@@ -47,23 +46,19 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     await set(ref(db, `users/${USER_ID}`), {words, history});
   }
 
-  // ------------------ STATS ------------------
   function updateStats(){
     document.getElementById("totalWords").textContent = words.length;
     let hard = words.filter(w=>w.interval>7).length;
     document.getElementById("hardWords").textContent = hard;
   }
 
-  // ------------------ SCREEN SWITCH ------------------
   function show(id){
     document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
     document.getElementById(id).classList.add("active");
   }
 
-  // ------------------ REWARD IMAGES ------------------
   const rewardImages = ["1.png","2.png","3.png","4.png","5.png"];
 
-  // ------------------ SPACED REPETITION ------------------
   function getPracticeWords(){
     let due = words.filter(w=>!w.due || w.due <= Math.floor(Date.now()/86400000));
     let result = [...due];
@@ -140,7 +135,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     const box=document.getElementById("reviewList"); box.innerHTML="";
     practice.forEach((w,i)=>{
       const row=document.createElement("div"); 
-      row.className="flex justify-between items-center";
+      row.className="flex justify-between items-center mb-1";
       row.innerHTML=`<span>${w.text}</span>
         <div class="flex border rounded-lg overflow-hidden">
           <button class="good px-3 py-1 text-green-600">✓</button>
@@ -213,20 +208,76 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   }
 
   document.getElementById("statsBack").addEventListener("click",()=>show("menu"));
-
 });
 </script>
 
 <style>
 body{background:#f0faff;}
 .screen{display:none;}
-.screen.active{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:65vh;}
+.screen.active{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:75vh;}
 </style>
+
+<!-- PWA иконка кота -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="cat-icon.png">
+<meta name="apple-mobile-web-app-title" content="Vocab Trainer">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#06b6d4">
+
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 <div class="w-full max-w-md bg-white rounded-[24px] shadow-xl p-6">
 
-<!-- Здесь вставляется весь HTML интерфейс (как раньше) -->
+<!-- MENU -->
+<div id="menu" class="screen active flex-col items-center">
+  <h1 class="text-2xl font-bold text-blue-500 mb-4">Vocab Trainer</h1>
+  <button id="startPractice" class="mb-2 w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Start Practice</button>
+  <button id="manageWords" class="mb-2 w-full py-2 px-4 rounded-xl bg-blue-500 text-white active:scale-95 transition">Manage Word List</button>
+  <button id="showStats" class="w-full py-2 px-4 rounded-xl bg-cyan-600 text-white active:scale-95 transition">Progress</button>
+  <div class="mt-4 text-center text-sm text-gray-600">Total Words: <span id="totalWords">0</span> | Hard Words: <span id="hardWords">0</span></div>
+</div>
+
+<!-- MANAGE WORDS -->
+<div id="manage" class="screen flex-col items-center">
+  <textarea id="bulkWords" class="w-full h-32 p-2 border rounded-lg mb-2" placeholder="Add words, comma or newline separated"></textarea>
+  <button id="importWords" class="mb-2 w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Save & Add</button>
+  <div id="wordList" class="w-full max-h-48 overflow-y-auto mb-2"></div>
+  <button id="backMenu" class="w-full py-2 px-4 rounded-xl bg-blue-500 text-white active:scale-95 transition">Back to Menu</button>
+</div>
+
+<!-- PREVIEW -->
+<div id="preview" class="screen flex-col items-center">
+  <h2 class="text-xl font-bold text-blue-500 mb-2">Preview Words</h2>
+  <div id="previewList" class="w-full mb-2"></div>
+  <button id="beginDictation" class="w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Begin Dictation</button>
+</div>
+
+<!-- DICTATION -->
+<div id="dictation" class="screen flex-col items-center">
+  <div id="dictWord" class="text-3xl font-bold text-blue-600 mb-4"></div>
+  <button id="nextWord" class="w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Next</button>
+</div>
+
+<!-- REVIEW -->
+<div id="review" class="screen flex-col items-center">
+  <div id="reviewList" class="w-full mb-2"></div>
+  <button id="finish" class="w-full py-2 px-4 rounded-xl bg-blue-500 text-white opacity-50" disabled>Save & Finish</button>
+</div>
+
+<!-- RESULTS -->
+<div id="results" class="screen flex-col items-center">
+  <h2 id="score" class="text-xl font-bold text-blue-600 mb-2">Score: 0/10</h2>
+  <div class="text-lg mb-2">Well done! See you tomorrow!</div>
+  <img id="rewardImage" class="w-full h-64 object-contain" src="" alt="Reward"/>
+  <button id="backHome" class="mt-2 w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Back to Menu</button>
+</div>
+
+<!-- STATS -->
+<div id="stats" class="screen flex-col items-center">
+  <canvas id="chart" width="300" height="150" class="border rounded-lg mb-2"></canvas>
+  <button id="statsBack" class="w-full py-2 px-4 rounded-xl bg-blue-500 text-white active:scale-95 transition">Back to Menu</button>
+</div>
 
 </div>
 </body>
