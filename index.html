@@ -6,167 +6,106 @@
     <title>Vocab Trainer PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #f0f9ff; font-family: -apple-system, system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
-        .card { background: white; border-radius: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .btn { transition: all 0.1s ease; cursor: pointer; border-radius: 18px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
-        .btn:active { transform: scale(0.95); opacity: 0.9; }
+        body { background-color: #f0faff; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; color: #1e293b; }
+        .card { background: white; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+        .btn { cursor: pointer; border-radius: 16px; font-weight: 700; transition: all 0.1s active; display: flex; align-items: center; justify-content: center; }
+        .btn:active { transform: scale(0.96); opacity: 0.8; }
         .btn-cyan { background-color: #06b6d4; color: white; }
-        .btn-light { background-color: #e0f7fa; color: #0891b2; border: 2px solid #a5f3fc; }
-        .btn-check { background-color: #dcfce7; color: #166534; border: 2px solid #bbf7d0; }
-        .btn-cross { background-color: #fee2e2; color: #991b1b; border: 2px solid #fecaca; }
-        .selected-check { background-color: #22c55e !important; color: white !important; }
-        .selected-cross { background-color: #ef4444 !important; color: white !important; }
-        
-        /* Аниме котик (SVG анимация) */
-        .cat-container { width: 120px; height: 120px; margin: 0 auto; position: relative; }
+        .btn-light { background-color: #e0f2fe; color: #0369a1; }
+        .btn-ok { background-color: #22c55e; color: white; }
+        .btn-no { background-color: #ef4444; color: white; }
+        .btn-gray { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+        .selected { outline: 4px solid #0ea5e9; transform: scale(1.05); }
     </style>
 </head>
-<body class="p-4 pt-6">
-    <div id="app" class="max-w-md mx-auto">
+<body class="p-4 flex flex-col min-h-screen">
+    <div id="app" class="max-w-md mx-auto w-full flex-grow">
         
-        <div id="screen-menu" class="space-y-8">
-            <header class="text-center pt-6">
+        <div id="screen-menu" class="space-y-8 pt-8">
+            <div class="text-center">
                 <h1 class="text-4xl font-black text-cyan-600 tracking-tight">Vocab<span class="text-blue-500">Trainer</span></h1>
-                <p class="text-cyan-800 opacity-50 font-medium">Ready for today's challenge?</p>
-            </header>
+                <p class="text-blue-400 font-medium">Ready for practice?</p>
+            </div>
             <div class="space-y-4">
-                <button onclick="prepareSession()" class="w-full h-24 btn btn-cyan text-2xl shadow-lg shadow-cyan-100">Start Practice</button>
-                <button onclick="showScreen('screen-settings')" class="w-full h-14 btn btn-light">Settings & Words</button>
+                <button onclick="prepareSession()" class="w-full h-24 btn btn-cyan text-2xl shadow-lg">Start Practice</button>
+                <button onclick="showScreen('screen-settings')" class="w-full h-14 btn btn-light text-lg">Manage Word List</button>
             </div>
-            <div id="menu-stats" class="card p-4 text-center text-cyan-700 bg-cyan-50/30 text-xs font-bold uppercase tracking-widest"></div>
         </div>
 
-        <div id="screen-preview" class="hidden space-y-6">
-            <h2 class="text-2xl font-bold text-gray-800 text-center">Today's Words</h2>
-            <div id="preview-list" class="card p-6 space-y-2 text-lg font-medium text-cyan-900"></div>
-            <button onclick="startDictation()" class="w-full h-16 btn btn-cyan text-xl shadow-md">Ready, Let's Go!</button>
+        <div id="screen-preview" class="hidden space-y-6 pt-4">
+            <h2 class="text-2xl font-bold text-center">Today's Words (10)</h2>
+            <div id="preview-list" class="card p-6 space-y-2 text-xl text-cyan-800 font-medium"></div>
+            <button onclick="startDictation()" class="w-full h-16 btn btn-cyan text-xl">I'm ready, let's go!</button>
         </div>
 
-        <div id="screen-dictation" class="hidden space-y-10 text-center">
-            <div class="card p-16 border-2 border-cyan-100">
-                <div id="active-word" class="text-5xl font-bold text-gray-900">Word</div>
-                <div id="word-counter" class="mt-4 text-cyan-400 font-bold text-sm">1 / 10</div>
+        <div id="screen-dictation" class="hidden space-y-8 pt-10 text-center">
+            <div class="card p-12 border-2 border-cyan-100">
+                <div id="active-word" class="text-5xl font-black text-slate-800">Word</div>
+                <div id="counter" class="mt-4 text-cyan-500 font-bold uppercase tracking-widest text-xs">1 OF 10</div>
             </div>
-            <button onclick="nextWord()" class="w-full h-20 btn btn-cyan text-xl shadow-lg">Next Word →</button>
+            <button onclick="nextWord()" class="w-full h-20 btn btn-cyan text-xl shadow-md">Next Word →</button>
         </div>
 
-        <div id="screen-review" class="hidden space-y-6">
-            <h2 class="text-2xl font-bold text-gray-800 text-center">Check Results</h2>
+        <div id="screen-review" class="hidden space-y-4 pb-20">
+            <h2 class="text-2xl font-bold text-center mb-4">Check Results</h2>
             <div id="review-list" class="space-y-3"></div>
-            <button id="finish-btn" onclick="showResults()" class="w-full h-16 btn btn-cyan text-xl opacity-50" disabled>Finish & Save</button>
+            <button id="finish-btn" onclick="saveResults()" class="w-full h-16 btn btn-cyan text-xl mt-6 opacity-50" disabled>Save & Finish</button>
         </div>
 
         <div id="screen-result" class="hidden space-y-8 text-center pt-10">
-            <div class="cat-container">
-                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="50" cy="55" r="35" fill="#fff" stroke="#06b6d4" stroke-width="3"/>
-                    <path d="M25 35 L15 10 L40 25" fill="#fff" stroke="#06b6d4" stroke-width="3"/>
-                    <path d="M75 35 L85 10 L60 25" fill="#fff" stroke="#06b6d4" stroke-width="3"/>
-                    <circle cx="35" cy="50" r="3" fill="#333"/>
-                    <circle cx="65" cy="50" r="3" fill="#333"/>
-                    <path d="M45 65 Q50 70 55 65" fill="none" stroke="#333" stroke-width="2"/>
-                    <circle cx="30" cy="60" r="5" fill="#ffcfdf" opacity="0.6"/>
-                    <circle cx="70" cy="60" r="5" fill="#ffcfdf" opacity="0.6"/>
+            <div class="flex justify-center">
+                <svg width="150" height="150" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="55" r="35" fill="white" stroke="#06b6d4" stroke-width="3"/>
+                    <path d="M25 35L15 10L40 25" fill="white" stroke="#06b6d4" stroke-width="3"/>
+                    <path d="M75 35L85 10L60 25" fill="white" stroke="#06b6d4" stroke-width="3"/>
+                    <circle cx="38" cy="50" r="3" fill="#333"/>
+                    <circle cx="62" cy="50" r="3" fill="#333"/>
+                    <path d="M45 65C45 65 50 68 55 65" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="30" cy="62" r="4" fill="#FDA4AF" opacity="0.6"/>
+                    <circle cx="70" cy="62" r="4" fill="#FDA4AF" opacity="0.6"/>
                 </svg>
             </div>
             <div>
-                <div id="final-score" class="text-6xl font-black text-cyan-600">8/10</div>
-                <p class="text-2xl font-bold text-gray-700 mt-2">Well done!<br>See you tomorrow!</p>
+                <div id="score-text" class="text-7xl font-black text-cyan-600 italic">8/10</div>
+                <p class="text-2xl font-bold text-slate-700 mt-4 leading-tight">Well done!<br>See you tomorrow!</p>
             </div>
-            <button onclick="showScreen('screen-menu')" class="w-full h-16 btn btn-light">Back to Home</button>
+            <button onclick="showScreen('screen-menu')" class="w-full h-14 btn btn-light">Back to Menu</button>
         </div>
 
-        <div id="screen-settings" class="hidden space-y-6">
+        <div id="screen-settings" class="hidden space-y-6 pt-4">
             <div class="card p-6">
-                <h2 class="font-bold mb-3">Bulk Import</h2>
-                <textarea id="import-input" class="w-full p-4 border-2 border-cyan-50 rounded-2xl h-32 focus:outline-none focus:border-cyan-300" placeholder="apple, banana, orange..."></textarea>
-                <button onclick="importData()" class="w-full h-12 mt-3 btn btn-cyan">Add Words</button>
+                <h2 class="font-bold mb-2">Import Words</h2>
+                <textarea id="import-box" class="w-full p-4 border rounded-xl h-32 focus:ring-2 ring-cyan-200 outline-none" placeholder="apple, banana, dog..."></textarea>
+                <button onclick="importWords()" class="w-full h-12 mt-3 btn btn-cyan">Add All</button>
             </div>
-            <div class="card p-6">
-                <div class="flex justify-between mb-4">
-                    <h2 class="font-bold">Words (<span id="count-label">0</span>)</h2>
-                    <button onclick="clearData()" class="text-red-400 text-xs font-bold">Clear All</button>
+            <div class="card p-6 pb-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-bold">Database (<span id="total-count">0</span>)</h2>
+                    <button onclick="resetAll()" class="text-red-400 text-xs font-bold">RESET ALL</button>
                 </div>
-                <div id="words-list" class="max-h-60 overflow-y-auto space-y-2 text-sm"></div>
+                <div id="full-list" class="max-h-60 overflow-y-auto space-y-2 pb-4"></div>
             </div>
-            <button onclick="showScreen('screen-menu')" class="w-full h-14 btn btn-light">Back</button>
+            <button onclick="showScreen('screen-menu')" class="w-full h-14 btn btn-gray">Back Home</button>
         </div>
 
     </div>
 
+    <div class="max-w-md mx-auto w-full py-4 mt-4 border-t border-cyan-100 flex justify-between text-[10px] font-black uppercase tracking-tighter text-cyan-700 opacity-60">
+        <span id="footer-total">TOTAL: 0 WORDS</span>
+        <span id="footer-hard">HARD: 0 WORDS</span>
+    </div>
+
     <script>
-        let allWords = JSON.parse(localStorage.getItem('vocab-v3') || '[]');
-        let sessionData = [];
-        let currentIdx = 0;
-        let marks = {}; // To store results during review
+        // DATA LAYER
+        let database = JSON.parse(localStorage.getItem('vocab_db_v4') || '[]');
+        let sessionWords = [];
+        let currentIndex = 0;
+        let results = {}; // key: index, value: boolean
+
+        function saveDb() {
+            localStorage.setItem('vocab_db_v4', JSON.stringify(database));
+            updateStats();
+        }
 
         function showScreen(id) {
-            document.querySelectorAll('#app > div').forEach(s => s.classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden');
-            if(id === 'screen-menu') updateStats();
-        }
-
-        function updateStats() {
-            const needsWork = allWords.filter(w => w.w > 5).length;
-            document.getElementById('menu-stats').innerHTML = `Total: ${allWords.length} | Hard: ${needsWork}`;
-        }
-
-        // --- SESSION FLOW ---
-
-        function prepareSession() {
-            if (allWords.length < 2) return alert("Add at least 2 words in settings!");
-            // Smart select 10 words
-            sessionData = [...allWords]
-                .sort((a,b) => (b.w + Math.random()*15) - (a.w + Math.random()*15))
-                .slice(0, 10);
-            
-            const list = document.getElementById('preview-list');
-            list.innerHTML = sessionData.map((w, i) => `<div>${i+1}. ${w.t}</div>`).join('');
-            showScreen('screen-preview');
-        }
-
-        function startDictation() {
-            currentIdx = 0;
-            marks = {};
-            showScreen('screen-dictation');
-            updateDictationWord();
-        }
-
-        function updateDictationWord() {
-            document.getElementById('active-word').innerText = sessionData[currentIdx].t;
-            document.getElementById('word-counter').innerText = `${currentIdx + 1} / ${sessionData.length}`;
-        }
-
-        function nextWord() {
-            currentIdx++;
-            if (currentIdx < sessionData.length) {
-                updateDictationWord();
-            } else {
-                startReview();
-            }
-        }
-
-        function startReview() {
-            const container = document.getElementById('review-list');
-            container.innerHTML = sessionData.map((w, i) => `
-                <div class="card p-4 flex items-center justify-between">
-                    <span class="text-lg font-bold text-gray-700">${w.t}</span>
-                    <div class="flex gap-2">
-                        <button id="check-${i}" onclick="setMark(${i}, true)" class="w-12 h-12 btn btn-check text-xl">✅</button>
-                        <button id="cross-${i}" onclick="setMark(${i}, false)" class="w-12 h-12 btn btn-cross text-xl">❌</button>
-                    </div>
-                </div>
-            `).join('');
-            showScreen('screen-review');
-            document.getElementById('finish-btn').disabled = true;
-            document.getElementById('finish-btn').classList.add('opacity-50');
-        }
-
-        function setMark(idx, isCorrect) {
-            marks[idx] = isCorrect;
-            
-            // UI Update for buttons
-            document.getElementById(`check-${idx}`).className = `w-12 h-12 btn btn-check text-xl ${isCorrect ? 'selected-check' : ''}`;
-            document.getElementById(`cross-${idx}`).className = `w-12 h-12 btn btn-cross text-xl ${!isCorrect ? 'selected-cross' : ''}`;
-            
-            // Enable finish button if all are marked
+            ["screen-menu", "screen-preview", "screen-dictation", "
