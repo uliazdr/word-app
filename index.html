@@ -150,22 +150,22 @@ function today(){ return Math.floor(Date.now()/86400000) }
 
 function updateStats(){
   document.getElementById("totalWords").textContent=words.length
-  let hard=words.filter(w=>w.interval>7).length
+  let hard = words.filter(w => w.mistakes && w.mistakes > 0).length
   document.getElementById("hardWords").textContent=hard
 }
 
 // Practice
 function getPracticeWords(){
-  let due=words.filter(w=>!w.due || w.due<=today())
-  let result=[...due]
+  let due = words.filter(w=>!w.due || w.due <= today())
+  let result = [...due]
   while(result.length<10){ result.push(words[Math.floor(Math.random()*words.length)]) }
   return result.slice(0,10)
 }
 
 // START PRACTICE
 document.getElementById("startPractice").addEventListener("click",()=>{
-  if(words.length===0)return
-  practice=getPracticeWords()
+  if(words.length===0) return
+  practice = getPracticeWords()
   let list=document.getElementById("previewList")
   list.innerHTML=""
   practice.forEach(w=>{list.innerHTML+=`<div>${w.text}</div>`})
@@ -229,20 +229,22 @@ function checkFinish(){
 document.getElementById("finish").addEventListener("click",()=>{
   let score=0
   practice.forEach((w,i)=>{
-    if(!w.interval)w.interval=1
-    if(!w.ease)w.ease=2.5
+    if(!w.interval) w.interval=1
+    if(!w.ease) w.ease=2.5
+    if(!w.mistakes) w.mistakes=0
     if(marks[i]==="good"){
       score++
-      w.interval=Math.round(w.interval*w.ease)
-      w.ease+=0.1
-    }else{
-      w.interval=1
-      w.ease=Math.max(1.3,w.ease-0.2)
+      w.interval = Math.round(w.interval * w.ease)
+      w.ease += 0.1
+    } else {
+      w.interval = 1
+      w.ease = Math.max(1.3, w.ease - 0.2)
+      w.mistakes++          // <-- добавляем ошибки
     }
-    w.due=today()+w.interval
+    w.due = today() + w.interval
   })
   history.push({date:today(),score:score})
-  if(history.length>30)history.shift()
+  if(history.length>30) history.shift()
   saveLocal(); saveToFirebase()
   updateStats()
   document.getElementById("score").textContent=`Score: ${score}/10`
@@ -271,7 +273,7 @@ function renderWordList(){
 }
 document.getElementById("importWords").addEventListener("click",()=>{
   let text=document.getElementById("bulkWords").value
-  text.split(/[\n,]/).map(w=>w.trim()).filter(Boolean).forEach(w=>words.push({text:w,interval:1,ease:2.5,due:today()}))
+  text.split(/[\n,]/).map(w=>w.trim()).filter(Boolean).forEach(w=>words.push({text:w,interval:1,ease:2.5,due:today(),mistakes:0}))
   document.getElementById("bulkWords").value=""
   saveLocal(); saveToFirebase()
   renderWordList(); updateStats()
