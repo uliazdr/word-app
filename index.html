@@ -1,10 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vocab Trainer</title>
 <script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Firebase compat -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  // Firebase конфиг
+  const firebaseConfig = {
+    apiKey: "AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
+    authDomain: "vocabtrainer-969fd.firebaseapp.com",
+    projectId: "vocabtrainer-969fd",
+    storageBucket: "vocabtrainer-969fd.firebasestorage.app",
+    messagingSenderId: "991443793775",
+    appId: "1:991443793775:web:0d044609e2b3eb4e611a9a",
+    databaseURL: "https://vocabtrainer-969fd-default-rtdb.firebaseio.com"
+  };
+
+  // Инициализация Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
+
+<style>
+body{background:#f0faff;}
+.screen{display:none;}
+.screen.active{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:75vh;}
+</style>
 
 <!-- Firebase модульный SDK -->
 <script type="module">
