@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vocab Trainer</title>
-
 <script src="https://cdn.tailwindcss.com"></script>
+
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -24,17 +24,8 @@ body{background:#f0faff}
 
 <div class="w-full max-w-md bg-white rounded-[24px] shadow-xl p-6">
 
-<!-- LOGIN SCREEN -->
-<div id="loginScreen" class="screen active text-center">
-<h1 class="text-2xl font-bold text-blue-600 mb-6">Vocab Trainer Login</h1>
-<input type="email" id="loginEmail" placeholder="Email" class="w-full border rounded-lg p-2 mb-3">
-<input type="password" id="loginPassword" placeholder="Password" class="w-full border rounded-lg p-2 mb-3">
-<button id="loginBtn" class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4 active:scale-95 transition">Login</button>
-<div id="loginError" class="text-red-500 text-sm"></div>
-</div>
-
 <!-- MENU -->
-<div id="menu" class="screen text-center">
+<div id="menu" class="screen active text-center">
 <h1 class="text-2xl font-bold text-blue-600 mb-6">Vocabulary Trainer</h1>
 <button id="startPractice" class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4 active:scale-95 transition">Start Practice</button>
 <button id="manageWords" class="w-full bg-blue-500 text-white py-3 rounded-xl mb-4 active:scale-95 transition">Manage Word List</button>
@@ -115,27 +106,23 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 
-// Firebase Auth login
-document.getElementById("loginBtn").addEventListener("click",()=>{
-  const email=document.getElementById("loginEmail").value
-  const pass=document.getElementById("loginPassword").value
-  const errBox=document.getElementById("loginError")
-  errBox.textContent=""
-  firebase.auth().signInWithEmailAndPassword(email,pass)
-  .then(()=>{ loadData(); show("menu") })
-  .catch(err=>{ errBox.textContent=err.message })
+// Авторизация единственного пользователя
+firebase.auth().signInWithEmailAndPassword("zdorovilo.ulia@gmail.com","chuKcha67")
+.then(user=>{
+  console.log("Signed in:",user.user.email)
+  initApp()
 })
+.catch(err=>{
+  console.error(err.code,err.message)
+});
 
-function loadData(){
-  firebase.database().ref("words").once("value").then(snap=>{ if(snap.val()) words=snap.val(); updateStats(); renderWordList() })
-  firebase.database().ref("history").once("value").then(snap=>{ if(snap.val()) history=snap.val() })
-}
+function initApp(){
 
-// Save functions
 function saveToFirebase(){
   firebase.database().ref("words").set(words)
   firebase.database().ref("history").set(history)
 }
+
 function saveLocal(){
   localStorage.setItem("words",JSON.stringify(words))
   localStorage.setItem("history",JSON.stringify(history))
@@ -148,24 +135,23 @@ function show(id){
 
 function today(){ return Math.floor(Date.now()/86400000) }
 
+// Hard words теперь считаются по ошибкам
 function updateStats(){
   document.getElementById("totalWords").textContent=words.length
-  let hard=words.filter(w=>w.interval>7).length
+  let hard=words.filter(w=>w.mistakes>0).length
   document.getElementById("hardWords").textContent=hard
 }
 
-// Practice
-function getPracticeWords(){
-  let due=words.filter(w=>!w.due || w.due<=today())
-  let result=[...due]
-  while(result.length<10){ result.push(words[Math.floor(Math.random()*words.length)]) }
-  return result.slice(0,10)
-}
+// Load from Firebase
+firebase.database().ref("words").once("value").then(snap=>{if(snap.val()) words=snap.val(); updateStats()})
+firebase.database().ref("history").once("value").then(snap=>{if(snap.val()) history=snap.val()})
 
 // START PRACTICE
 document.getElementById("startPractice").addEventListener("click",()=>{
   if(words.length===0)return
-  practice=getPracticeWords()
+  practice=words.filter(w=>!w.due || w.due<=today())
+  while(practice.length<10) practice.push(words[Math.floor(Math.random()*words.length)])
+  practice=practice.slice(0,10)
   let list=document.getElementById("previewList")
   list.innerHTML=""
   practice.forEach(w=>{list.innerHTML+=`<div>${w.text}</div>`})
@@ -198,7 +184,8 @@ function buildReview(){
     <div class="flex border rounded-lg overflow-hidden">
       <button class="good px-3 py-1 text-green-600">✓</button>
       <button class="bad px-3 py-1 text-red-600">✕</button>
-    </div>`
+    </div>
+    `
     const good=row.querySelector(".good")
     const bad=row.querySelector(".bad")
     good.addEventListener("click",()=>{
@@ -229,21 +216,25 @@ function checkFinish(){
 document.getElementById("finish").addEventListener("click",()=>{
   let score=0
   practice.forEach((w,i)=>{
-    if(!w.interval)w.interval=1
-    if(!w.ease)w.ease=2.5
+    if(!w.interval) w.interval=1
+    if(!w.ease) w.ease=2.5
+    if(!w.mistakes) w.mistakes=0
     if(marks[i]==="good"){
       score++
       w.interval=Math.round(w.interval*w.ease)
       w.ease+=0.1
+      w.mistakes=Math.max(0,w.mistakes-1) // уменьшаем ошибки, если угадала
     }else{
       w.interval=1
       w.ease=Math.max(1.3,w.ease-0.2)
+      w.mistakes++
     }
     w.due=today()+w.interval
   })
   history.push({date:today(),score:score})
-  if(history.length>30)history.shift()
-  saveLocal(); saveToFirebase()
+  if(history.length>30) history.shift()
+  saveLocal()
+  saveToFirebase()
   updateStats()
   document.getElementById("score").textContent=`Score: ${score}/10`
   const rewardImages=["1.png","2.png","3.png","4.png","5.png"]
@@ -253,7 +244,7 @@ document.getElementById("finish").addEventListener("click",()=>{
 })
 
 // WORD MANAGEMENT
-document.getElementById("manageWords").addEventListener("click",()=>{ renderWordList(); show("manage") })
+document.getElementById("manageWords").addEventListener("click",()=>{renderWordList(); show("manage")})
 function renderWordList(){
   let list=document.getElementById("wordList")
   list.innerHTML=""
@@ -271,7 +262,9 @@ function renderWordList(){
 }
 document.getElementById("importWords").addEventListener("click",()=>{
   let text=document.getElementById("bulkWords").value
-  text.split(/[\n,]/).map(w=>w.trim()).filter(Boolean).forEach(w=>words.push({text:w,interval:1,ease:2.5,due:today()}))
+  text.split(/[\n,]/).map(w=>w.trim()).filter(Boolean).forEach(w=>{
+    words.push({text:w,interval:1,ease:2.5,due:today(),mistakes:0})
+  })
   document.getElementById("bulkWords").value=""
   saveLocal(); saveToFirebase()
   renderWordList(); updateStats()
