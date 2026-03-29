@@ -1,206 +1,300 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vocab Trainer</title>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <style>
-body{
-font-family:Arial;
-text-align:center;
-background:#f5f5f5;
-padding:40px;
-}
-
-button{
-padding:14px;
-margin:8px;
-font-size:16px;
-width:220px;
-border:none;
-border-radius:8px;
-background:#2d7ef7;
-color:white;
-}
-
-button:hover{
-opacity:0.9;
-}
-
-input{
-padding:10px;
-margin:6px;
-font-size:16px;
-width:220px;
-}
-
-#screen{
-margin-top:30px;
-}
+body{background:#f0faff}
+.screen{display:none}
+.screen.active{display:flex;flex-direction:column;justify-content:center;min-height:65vh}
 </style>
 
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#06b6d4">
 </head>
+<body class="min-h-screen flex items-center justify-center p-4">
 
-<body>
+<div class="w-full max-w-md bg-white rounded-[24px] shadow-xl p-6">
 
-<h2>Vocab Trainer</h2>
-
-<div id="login">
-
-<input id="email" placeholder="email"><br>
-<input id="password" type="password" placeholder="password"><br>
-
-<button onclick="login()">Login</button>
-
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="screen active text-center">
+<h1 class="text-2xl font-bold text-blue-600 mb-6">Vocab Trainer Login</h1>
+<input type="email" id="loginEmail" placeholder="Email" class="w-full border rounded-lg p-2 mb-3">
+<input type="password" id="loginPassword" placeholder="Password" class="w-full border rounded-lg p-2 mb-3">
+<button id="loginBtn" class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4 active:scale-95 transition">Login</button>
+<div id="loginError" class="text-red-500 text-sm"></div>
 </div>
 
-<div id="app" style="display:none">
+<!-- MENU -->
+<div id="menu" class="screen text-center">
+<h1 class="text-2xl font-bold text-blue-600 mb-6">Vocabulary Trainer</h1>
+<button id="startPractice" class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4 active:scale-95 transition">Start Practice</button>
+<button id="manageWords" class="w-full bg-blue-500 text-white py-3 rounded-xl mb-4 active:scale-95 transition">Manage Word List</button>
+<button id="showStats" class="w-full bg-cyan-600 text-white py-3 rounded-xl active:scale-95 transition">Progress</button>
+<div class="text-center text-sm text-gray-500 mt-6">
+<div>Total Words: <span id="totalWords">0</span></div>
+<div>Hard Words: <span id="hardWords">0</span></div>
+</div>
+</div>
 
-<button onclick="startDictation()">Start dictation</button><br>
-<button onclick="showWords()">Manage word list</button><br>
-<button onclick="showProgress()">Progress</button>
+<!-- WORD MANAGEMENT -->
+<div id="manage" class="screen">
+<h2 class="text-lg font-bold mb-3 text-center">Import Words</h2>
+<textarea id="bulkWords" class="w-full border rounded-lg p-2 h-24 mb-3" placeholder="comma or new line separated"></textarea>
+<button id="importWords" class="w-full bg-cyan-500 text-white py-2 rounded-lg mb-4 active:scale-95">Import</button>
+<div id="wordList" class="max-h-48 overflow-y-auto text-sm mb-4"></div>
+<button id="backMenu" class="w-full bg-gray-200 py-2 rounded-lg active:scale-95">Back</button>
+</div>
 
-<div id="screen"></div>
+<!-- PREVIEW -->
+<div id="preview" class="screen text-center">
+<h2 class="text-lg font-bold mb-4">Preview Words</h2>
+<div id="previewList" class="mb-4"></div>
+<button id="beginDictation" class="w-full bg-cyan-500 text-white py-3 rounded-xl active:scale-95">Start Dictation</button>
+</div>
+
+<!-- DICTATION -->
+<div id="dictation" class="screen text-center">
+<div id="dictWord" class="text-3xl font-bold text-blue-600 mb-6"></div>
+<button id="nextWord" class="w-full bg-cyan-500 text-white py-3 rounded-xl active:scale-95">Next</button>
+</div>
+
+<!-- REVIEW -->
+<div id="review" class="screen">
+<div id="reviewList" class="space-y-2 mb-4"></div>
+<button id="finish" disabled class="w-full bg-blue-500 text-white py-3 rounded-xl opacity-50">Save & Finish</button>
+</div>
+
+<!-- RESULTS -->
+<div id="results" class="screen text-center">
+<div class="mb-6">
+<div id="score" class="text-2xl font-bold text-blue-600 mb-2"></div>
+<p>Well done! See you tomorrow!</p>
+</div>
+<img id="rewardImage" class="w-full h-72 object-contain">
+<button id="backHome" class="w-full mt-6 bg-cyan-500 text-white py-3 rounded-xl active:scale-95">Back to Menu</button>
+</div>
+
+<!-- STATS -->
+<div id="stats" class="screen text-center">
+<h2 class="text-xl font-bold text-blue-600 mb-4">Progress</h2>
+<canvas id="chart" height="200"></canvas>
+<button id="statsBack" class="w-full mt-6 bg-gray-200 py-2 rounded-lg">Back</button>
+</div>
 
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded",()=>{
 
+let words=[]
+let history=[]
+let practice=[]
+let marks={}
+let current=0
+
+// Firebase config
 const firebaseConfig = {
-apiKey: "API_KEY",
-authDomain: "vocabtrainer-969fd.firebaseapp.com",
-databaseURL: "https://vocabtrainer-969fd-default-rtdb.europe-west1.firebasedatabase.app",
-projectId: "vocabtrainer-969fd"
+  apiKey: "AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
+  authDomain: "vocabtrainer-969fd.firebaseapp.com",
+  databaseURL: "https://vocabtrainer-969fd-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "vocabtrainer-969fd",
+  storageBucket: "vocabtrainer-969fd.appspot.com",
+  messagingSenderId: "991443793775",
+  appId: "1:991443793775:web:0d044609e2b3eb4e611a9a"
 };
 
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 
-const auth = firebase.auth();
-const db = firebase.database();
+// Firebase Auth login
+document.getElementById("loginBtn").addEventListener("click",()=>{
+  const email=document.getElementById("loginEmail").value
+  const pass=document.getElementById("loginPassword").value
+  const errBox=document.getElementById("loginError")
+  errBox.textContent=""
+  firebase.auth().signInWithEmailAndPassword(email,pass)
+  .then(()=>{ loadData(); show("menu") })
+  .catch(err=>{ errBox.textContent=err.message })
+})
 
-let words = [];
-
-auth.onAuthStateChanged(user => {
-
-if(user){
-
-document.getElementById("login").style.display="none";
-document.getElementById("app").style.display="block";
-
-loadWords();
-
+function loadData(){
+  firebase.database().ref("words").once("value").then(snap=>{ if(snap.val()) words=snap.val(); updateStats(); renderWordList() })
+  firebase.database().ref("history").once("value").then(snap=>{ if(snap.val()) history=snap.val() })
 }
 
-});
-
-function login(){
-
-const email=document.getElementById("email").value;
-const pass=document.getElementById("password").value;
-
-auth.signInWithEmailAndPassword(email,pass);
-
+// Save functions
+function saveToFirebase(){
+  firebase.database().ref("words").set(words)
+  firebase.database().ref("history").set(history)
+}
+function saveLocal(){
+  localStorage.setItem("words",JSON.stringify(words))
+  localStorage.setItem("history",JSON.stringify(history))
 }
 
-function loadWords(){
-
-db.ref("words").once("value").then(snap=>{
-
-const data=snap.val();
-
-if(!data){
-words=[];
-return;
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"))
+  document.getElementById(id).classList.add("active")
 }
 
-words=Object.values(data);
+function today(){ return Math.floor(Date.now()/86400000) }
 
-console.log("words loaded",words);
-
-});
-
+function updateStats(){
+  document.getElementById("totalWords").textContent=words.length
+  let hard=words.filter(w=>w.interval>7).length
+  document.getElementById("hardWords").textContent=hard
 }
 
-function startDictation(){
-
-if(words.length===0){
-
-document.getElementById("screen").innerHTML="No words in database";
-return;
-
+// Practice
+function getPracticeWords(){
+  let due=words.filter(w=>!w.due || w.due<=today())
+  let result=[...due]
+  while(result.length<10){ result.push(words[Math.floor(Math.random()*words.length)]) }
+  return result.slice(0,10)
 }
 
-let w=words[Math.floor(Math.random()*words.length)];
+// START PRACTICE
+document.getElementById("startPractice").addEventListener("click",()=>{
+  if(words.length===0)return
+  practice=getPracticeWords()
+  let list=document.getElementById("previewList")
+  list.innerHTML=""
+  practice.forEach(w=>{list.innerHTML+=`<div>${w.text}</div>`})
+  show("preview")
+})
 
-document.getElementById("screen").innerHTML=
+// DICTATION
+document.getElementById("beginDictation").addEventListener("click",()=>{
+  current=0
+  document.getElementById("dictWord").textContent=practice[current].text
+  show("dictation")
+})
+document.getElementById("nextWord").addEventListener("click",()=>{
+  current++
+  if(current<practice.length){
+    document.getElementById("dictWord").textContent=practice[current].text
+  }else{ buildReview() }
+})
 
-"<h3>"+w.text+"</h3>"+
-"<button onclick='markWrong()'>Wrong</button>"+
-"<button onclick='markRight()'>Correct</button>";
-
+// REVIEW
+function buildReview(){
+  marks={}
+  let box=document.getElementById("reviewList")
+  box.innerHTML=""
+  practice.forEach((w,i)=>{
+    let row=document.createElement("div")
+    row.className="flex justify-between items-center"
+    row.innerHTML=`
+    <span>${w.text}</span>
+    <div class="flex border rounded-lg overflow-hidden">
+      <button class="good px-3 py-1 text-green-600">✓</button>
+      <button class="bad px-3 py-1 text-red-600">✕</button>
+    </div>`
+    const good=row.querySelector(".good")
+    const bad=row.querySelector(".bad")
+    good.addEventListener("click",()=>{
+      marks[i]="good"
+      good.classList.add("bg-green-500","text-white")
+      bad.classList.remove("bg-red-500","text-white")
+      checkFinish()
+    })
+    bad.addEventListener("click",()=>{
+      marks[i]="bad"
+      bad.classList.add("bg-red-500","text-white")
+      good.classList.remove("bg-green-500","text-white")
+      checkFinish()
+    })
+    box.appendChild(row)
+  })
+  show("review")
+}
+function checkFinish(){
+  if(Object.keys(marks).length===practice.length){
+    let btn=document.getElementById("finish")
+    btn.disabled=false
+    btn.classList.remove("opacity-50")
+  }
 }
 
-function markWrong(){
+// FINISH
+document.getElementById("finish").addEventListener("click",()=>{
+  let score=0
+  practice.forEach((w,i)=>{
+    if(!w.interval)w.interval=1
+    if(!w.ease)w.ease=2.5
+    if(marks[i]==="good"){
+      score++
+      w.interval=Math.round(w.interval*w.ease)
+      w.ease+=0.1
+    }else{
+      w.interval=1
+      w.ease=Math.max(1.3,w.ease-0.2)
+    }
+    w.due=today()+w.interval
+  })
+  history.push({date:today(),score:score})
+  if(history.length>30)history.shift()
+  saveLocal(); saveToFirebase()
+  updateStats()
+  document.getElementById("score").textContent=`Score: ${score}/10`
+  const rewardImages=["1.png","2.png","3.png","4.png","5.png"]
+  let img=rewardImages[Math.floor(Math.random()*rewardImages.length)]
+  document.getElementById("rewardImage").src=img
+  show("results")
+})
 
-document.getElementById("screen").innerHTML="marked wrong";
-
+// WORD MANAGEMENT
+document.getElementById("manageWords").addEventListener("click",()=>{ renderWordList(); show("manage") })
+function renderWordList(){
+  let list=document.getElementById("wordList")
+  list.innerHTML=""
+  words.forEach((w,i)=>{
+    let row=document.createElement("div")
+    row.className="flex justify-between mb-1"
+    row.innerHTML=`<span>${w.text}</span><button class="text-red-500">✕</button>`
+    row.querySelector("button").addEventListener("click",()=>{
+      words.splice(i,1)
+      saveLocal(); saveToFirebase()
+      renderWordList(); updateStats()
+    })
+    list.appendChild(row)
+  })
 }
+document.getElementById("importWords").addEventListener("click",()=>{
+  let text=document.getElementById("bulkWords").value
+  text.split(/[\n,]/).map(w=>w.trim()).filter(Boolean).forEach(w=>words.push({text:w,interval:1,ease:2.5,due:today()}))
+  document.getElementById("bulkWords").value=""
+  saveLocal(); saveToFirebase()
+  renderWordList(); updateStats()
+})
 
-function markRight(){
-
-document.getElementById("screen").innerHTML="marked correct";
-
+// STATS
+document.getElementById("showStats").addEventListener("click",()=>{drawChart(); show("stats")})
+function drawChart(){
+  let canvas=document.getElementById("chart"), ctx=canvas.getContext("2d")
+  ctx.clearRect(0,0,canvas.width,canvas.height)
+  let w=canvas.width,h=canvas.height,max=10
+  history.forEach((d,i)=>{
+    let x=i*(w/30)
+    let bar=h*(d.score/max)
+    ctx.fillStyle="#06b6d4"
+    ctx.fillRect(x,h-bar,8,bar)
+  })
 }
+document.getElementById("statsBack").addEventListener("click",()=>show("menu"))
+document.getElementById("backMenu").addEventListener("click",()=>show("menu"))
+document.getElementById("backHome").addEventListener("click",()=>show("menu"))
 
-function showWords(){
-
-db.ref("words").once("value").then(snap=>{
-
-let data=snap.val();
-
-let html="<h3>Word list</h3>";
-
-for(let id in data){
-
-html+=data[id].text+"<br>";
-
-}
-
-document.getElementById("screen").innerHTML=html;
-
-});
-
-}
-
-function showProgress(){
-
-db.ref("history").once("value").then(snap=>{
-
-let data=snap.val();
-
-if(!data){
-document.getElementById("screen").innerHTML="No history yet";
-return;
-}
-
-let html="<h3>History</h3>";
-
-for(let id in data){
-
-html+=data[id].date+" : "+data[id].score+"<br>";
-
-}
-
-document.getElementById("screen").innerHTML=html;
-
-});
-
-}
-
+})
 </script>
 
 </body>
