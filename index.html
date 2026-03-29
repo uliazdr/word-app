@@ -7,243 +7,152 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 <style>
-body{background:#f0faff;margin:0;padding:0;font-family:sans-serif;}
-.screen{display:none;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:75vh;}
-.screen.active{display:flex;}
-textarea{resize:none;}
-button{cursor:pointer;}
+body{background:#f0faff;}
+.screen{display:none;}
+.screen.active{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:65vh;}
+.word-item{display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:4px;}
 </style>
-
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="cat-icon.png">
-<meta name="apple-mobile-web-app-title" content="Vocab Trainer">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#06b6d4">
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="min-h-screen flex items-center justify-center p-4">
 <div class="w-full max-w-md bg-white rounded-[24px] shadow-xl p-6">
 
-<!-- MENU -->
-<div id="menu" class="screen active">
-  <h1 class="text-2xl font-bold text-blue-500 mb-4">Vocab Trainer</h1>
-  <button id="startPractice" class="mb-2 w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Start Practice</button>
-  <button id="manageWords" class="mb-2 w-full py-2 px-4 rounded-xl bg-blue-500 text-white active:scale-95 transition">Manage Word List</button>
-  <button id="showProgress" class="mb-2 w-full py-2 px-4 rounded-xl bg-teal-500 text-white active:scale-95 transition">📊 Progress</button>
-  <div class="mt-4 text-sm text-gray-600">Total Words: <span id="totalWords">0</span> | Hard Words: <span id="hardWords">0</span></div>
-</div>
+  <!-- Start Screen -->
+  <div id="startScreen" class="screen active flex flex-col gap-4">
+    <h1 class="text-2xl font-bold text-blue-500">Vocab Trainer</h1>
+    <button id="startPracticeBtn" class="bg-cyan-500 hover:bg-cyan-600 text-white py-3 rounded-lg active:scale-95 transition">Start Practice</button>
+    <button id="manageWordsBtn" class="bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg active:scale-95 transition">Manage Word List</button>
+    <button id="showProgressBtn" class="bg-teal-400 hover:bg-teal-500 text-white py-2 rounded-lg active:scale-95 transition mt-2">📊 Progress</button>
+    <div class="mt-4 flex justify-between w-full text-sm">
+      <span>Total Words: <span id="totalWords">0</span></span>
+      <span>Hard Words: <span id="hardWords">0</span></span>
+    </div>
+  </div>
 
-<!-- MANAGE WORDS -->
-<div id="manage" class="screen">
-  <textarea id="bulkWords" class="w-full h-32 p-2 border rounded-lg mb-2" placeholder="Add words, comma or newline separated"></textarea>
-  <button id="importWords" class="mb-2 w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Save & Add</button>
-  <div id="wordList" class="w-full max-h-48 overflow-y-auto mb-2"></div>
-  <button id="backMenu" class="w-full py-2 px-4 rounded-xl bg-blue-500 text-white active:scale-95 transition">Back to Menu</button>
-</div>
+  <!-- Manage Words Screen -->
+  <div id="manageScreen" class="screen flex flex-col gap-4 w-full">
+    <h2 class="text-xl font-bold text-blue-500">Manage Words</h2>
+    <textarea id="wordInput" class="border p-2 w-full h-32 rounded-lg" placeholder="Add words, one per line"></textarea>
+    <button id="saveWordsBtn" class="bg-cyan-500 hover:bg-cyan-600 text-white py-2 rounded-lg active:scale-95 transition">Save & Add</button>
+    <div id="wordList" class="overflow-y-auto max-h-48 mt-2"></div>
+    <button id="backFromManage" class="bg-gray-300 text-black py-2 rounded-lg active:scale-95 transition mt-2">Back</button>
+  </div>
 
-<!-- PREVIEW -->
-<div id="preview" class="screen">
-  <h2 class="text-xl font-bold text-blue-500 mb-2">Preview Words</h2>
-  <div id="previewList" class="w-full mb-2"></div>
-  <button id="beginDictation" class="w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Begin Dictation</button>
-</div>
+  <!-- Practice Placeholder -->
+  <div id="practiceScreen" class="screen flex flex-col gap-4 w-full">
+    <h2 class="text-xl font-bold text-blue-500">Practice</h2>
+    <div id="practiceWord" class="text-3xl font-bold text-center my-4"></div>
+    <button id="nextWordBtn" class="bg-cyan-500 hover:bg-cyan-600 text-white py-3 rounded-lg active:scale-95 transition">Next</button>
+  </div>
 
-<!-- DICTATION -->
-<div id="dictation" class="screen">
-  <div id="dictWord" class="text-3xl font-bold text-blue-600 mb-4"></div>
-  <button id="nextWord" class="w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Next</button>
-</div>
+  <!-- Review Placeholder -->
+  <div id="reviewScreen" class="screen flex flex-col gap-4 w-full">
+    <h2 class="text-xl font-bold text-blue-500">Review</h2>
+    <div id="reviewList" class="w-full"></div>
+    <button id="finishReviewBtn" class="bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg active:scale-95 transition mt-2" disabled>Finish</button>
+  </div>
 
-<!-- REVIEW -->
-<div id="review" class="screen">
-  <div id="reviewList" class="w-full mb-2"></div>
-  <button id="finish" class="w-full py-2 px-4 rounded-xl bg-blue-500 text-white opacity-50" disabled>Save & Finish</button>
-</div>
-
-<!-- RESULTS -->
-<div id="results" class="screen">
-  <h2 id="score" class="text-xl font-bold text-blue-600 mb-2">Score: 0/10</h2>
-  <div class="text-lg mb-2">Well done! See you tomorrow!</div>
-  <img id="rewardImage" class="w-full h-64 object-contain" src="" alt="Reward"/>
-  <button id="backHome" class="mt-2 w-full py-2 px-4 rounded-xl bg-cyan-500 text-white active:scale-95 transition">Back to Menu</button>
-</div>
-
-<!-- PROGRESS -->
-<div id="progress" class="screen">
-  <h2 class="text-xl font-bold text-blue-500 mb-2">Progress Over Time</h2>
-  <div id="progressList" class="w-full max-h-64 overflow-y-auto mb-2"></div>
-  <button id="backFromProgress" class="w-full py-2 px-4 rounded-xl bg-blue-500 text-white active:scale-95 transition">Back to Menu</button>
-</div>
+  <!-- Progress Placeholder -->
+  <div id="progressScreen" class="screen flex flex-col gap-4 w-full">
+    <h2 class="text-xl font-bold text-blue-500">Progress Over Time</h2>
+    <canvas id="progressChart"></canvas>
+    <button id="backFromProgress" class="bg-gray-300 text-black py-2 rounded-lg active:scale-95 transition mt-2">Back</button>
+  </div>
 
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", ()=>{
+// Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
+  authDomain: "vocabtrainer-969fd.firebaseapp.com",
+  databaseURL: "https://vocabtrainer-969fd-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "vocabtrainer-969fd",
+  storageBucket: "vocabtrainer-969fd.appspot.com",
+  messagingSenderId: "991443793775",
+  appId: "1:991443793775:web:0d044609e2b3eb4e611a9a"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-  // Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
-    authDomain: "vocabtrainer-969fd.firebaseapp.com",
-    databaseURL: "https://vocabtrainer-969fd-default-rtdb.firebaseio.com",
-    projectId: "vocabtrainer-969fd",
-    storageBucket: "vocabtrainer-969fd.appspot.com",
-    messagingSenderId: "991443793775",
-    appId: "1:991443793775:web:0d044609e2b3eb4e611a9a"
-  };
-  firebase.initializeApp(firebaseConfig);
+// Screens
+const startScreen = document.getElementById("startScreen");
+const manageScreen = document.getElementById("manageScreen");
+const practiceScreen = document.getElementById("practiceScreen");
+const reviewScreen = document.getElementById("reviewScreen");
+const progressScreen = document.getElementById("progressScreen");
 
-  let words = [], history = [];
-  let practice = [], marks = {}, current = 0;
-  const rewardImages = ["1.png","2.png","3.png","4.png","5.png"];
+// Buttons
+const startPracticeBtn = document.getElementById("startPracticeBtn");
+const manageWordsBtn = document.getElementById("manageWordsBtn");
+const showProgressBtn = document.getElementById("showProgressBtn");
+const backFromManage = document.getElementById("backFromManage");
+const backFromProgress = document.getElementById("backFromProgress");
 
-  async function loadData(){
-    const snapshotWords = await firebase.database().ref("words").get();
-    const snapshotHistory = await firebase.database().ref("history").get();
-    if(snapshotWords.exists()) words = snapshotWords.val();
-    if(snapshotHistory.exists()) history = snapshotHistory.val();
-    updateStats();
-  }
+// Manage Words
+const wordInput = document.getElementById("wordInput");
+const saveWordsBtn = document.getElementById("saveWordsBtn");
+const wordList = document.getElementById("wordList");
 
-  function saveData(){ 
-    firebase.database().ref("words").set(words);
-    firebase.database().ref("history").set(history);
-    updateStats();
-  }
+// Show/Hide
+function showScreen(screen){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  screen.classList.add('active');
+}
 
-  function updateStats(){
-    document.getElementById("totalWords").textContent = words.length;
-    let hard = words.filter(w=>w.interval>7).length;
-    document.getElementById("hardWords").textContent = hard;
-  }
-
-  function show(id){
-    document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-    document.getElementById(id).classList.add("active");
-  }
-
-  function getPracticeWords(){
-    let due = words.filter(w=>!w.due || w.due <= Math.floor(Date.now()/86400000));
-    let result = [...due];
-    while(result.length<10 && words.length>0) result.push(words[Math.floor(Math.random()*words.length)]);
-    return result.slice(0,10);
-  }
-
-  // MENU BUTTONS
-  document.getElementById("startPractice").addEventListener("click",()=>{
-    if(words.length===0) return alert("Add some words first!");
-    practice = getPracticeWords();
-    const list = document.getElementById("previewList");
-    list.innerHTML="";
-    practice.forEach(w=>list.innerHTML+=`<div>${w.text}</div>`);
-    show("preview");
-  });
-
-  document.getElementById("manageWords").addEventListener("click",()=>{
-    renderWordList();
-    show("manage");
-  });
-
-  document.getElementById("showProgress").addEventListener("click",()=>{
-    const list=document.getElementById("progressList");
-    list.innerHTML="";
-    history.forEach(h=>{
-      list.innerHTML+=`<div>Date: ${h.date}, Score: ${h.score}/10</div>`;
+// Load words from Firebase
+function loadWords(){
+  db.ref('words').once('value', snapshot=>{
+    const data = snapshot.val() || [];
+    wordList.innerHTML = '';
+    let hardCount = 0;
+    data.forEach((w,i)=>{
+      const div = document.createElement('div');
+      div.className = 'word-item';
+      div.innerHTML = `
+        <span>${w.text}</span>
+        <button data-index="${i}" class="deleteWordBtn text-red-500 font-bold">X</button>
+      `;
+      wordList.appendChild(div);
+      if(w.interval>3) hardCount++;
     });
-    show("progress");
-  });
+    document.getElementById('totalWords').textContent = data.length;
+    document.getElementById('hardWords').textContent = hardCount;
 
-  // MANAGE WORDS
-  function renderWordList(){
-    const list = document.getElementById("wordList"); list.innerHTML="";
-    words.forEach((w,i)=>{
-      const row = document.createElement("div");
-      row.className="flex justify-between mb-1";
-      row.innerHTML=`<span>${w.text}</span><button class="text-red-500">✕</button>`;
-      row.querySelector("button").addEventListener("click",()=>{
-        words.splice(i,1); saveData(); renderWordList();
+    document.querySelectorAll('.deleteWordBtn').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        const idx = parseInt(e.target.dataset.index);
+        data.splice(idx,1);
+        db.ref('words').set(data);
+        loadWords();
       });
-      list.appendChild(row);
     });
-  }
+  });
+}
 
-  document.getElementById("importWords").addEventListener("click",()=>{
-    const text = document.getElementById("bulkWords").value;
-    text.split(/[\n,]/).map(w=>w.trim()).filter(Boolean).forEach(w=>{
-      words.push({text:w, interval:1, ease:2.5, due:Math.floor(Date.now()/86400000)});
+// Save words
+saveWordsBtn.addEventListener('click', ()=>{
+  const lines = wordInput.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  if(lines.length===0) return;
+  db.ref('words').once('value', snapshot=>{
+    const data = snapshot.val() || [];
+    lines.forEach(t=>{
+      data.push({text:t, interval:1, ease:2.5, due:Math.floor(Date.now()/86400000)});
     });
-    document.getElementById("bulkWords").value="";
-    saveData(); renderWordList();
+    db.ref('words').set(data);
+    wordInput.value='';
+    loadWords();
   });
-
-  document.getElementById("backMenu").addEventListener("click",()=>show("menu"));
-  document.getElementById("backFromProgress").addEventListener("click",()=>show("menu"));
-
-  // DICTATION
-  document.getElementById("beginDictation").addEventListener("click",()=>{
-    current=0; document.getElementById("dictWord").textContent=practice[current].text;
-    show("dictation");
-  });
-
-  document.getElementById("nextWord").addEventListener("click",()=>{
-    current++; 
-    if(current<practice.length) document.getElementById("dictWord").textContent=practice[current].text;
-    else buildReview();
-  });
-
-  // REVIEW
-  function buildReview(){
-    marks={};
-    const box=document.getElementById("reviewList"); box.innerHTML="";
-    practice.forEach((w,i)=>{
-      const row=document.createElement("div");
-      row.className="flex justify-between items-center mb-1";
-      row.innerHTML=`<span>${w.text}</span>
-        <div class="flex border rounded-lg overflow-hidden">
-          <button class="good px-3 py-1 text-green-600">✓</button>
-          <button class="bad px-3 py-1 text-red-600">✕</button>
-        </div>`;
-      const good=row.querySelector(".good"); 
-      const bad=row.querySelector(".bad");
-      good.addEventListener("click",()=>{
-        marks[i]="good"; good.classList.add("bg-green-500","text-white"); bad.classList.remove("bg-red-500","text-white"); checkFinish();
-      });
-      bad.addEventListener("click",()=>{
-        marks[i]="bad"; bad.classList.add("bg-red-500","text-white"); good.classList.remove("bg-green-500","text-white"); checkFinish();
-      });
-      box.appendChild(row);
-    });
-    show("review");
-  }
-
-  function checkFinish(){
-    if(Object.keys(marks).length===practice.length){
-      const btn=document.getElementById("finish"); 
-      btn.disabled=false; btn.classList.remove("opacity-50");
-    }
-  }
-
-  document.getElementById("finish").addEventListener("click",()=>{
-    let score=0;
-    practice.forEach((w,i)=>{
-      if(!w.interval) w.interval=1;
-      if(!w.ease) w.ease=2.5;
-      if(marks[i]==="good"){ score++; w.interval=Math.round(w.interval*w.ease); w.ease+=0.1; }
-      else{ w.interval=1; w.ease=Math.max(1.3,w.ease-0.2); }
-      w.due=Math.floor(Date.now()/86400000)+w.interval;
-    });
-    history.push({date:Math.floor(Date.now()/86400000),score}); if(history.length>30) history.shift();
-    saveData();
-    document.getElementById("score").textContent=`Score: ${score}/10`;
-    document.getElementById("rewardImage").src=rewardImages[Math.floor(Math.random()*rewardImages.length)];
-    show("results");
-  });
-
-  document.getElementById("backHome").addEventListener("click",()=>show("menu"));
-
-  loadData();
 });
+
+// Buttons
+startPracticeBtn.addEventListener('click', ()=>{ alert('Practice starts!'); });
+manageWordsBtn.addEventListener('click', ()=>{ showScreen(manageScreen); loadWords(); });
+showProgressBtn.addEventListener('click', ()=>{ showScreen(progressScreen); });
+backFromManage.addEventListener('click', ()=>showScreen(startScreen));
+backFromProgress.addEventListener('click', ()=>showScreen(startScreen));
 </script>
 </body>
 </html>
