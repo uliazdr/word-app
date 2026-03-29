@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vocab Trainer</title>
+
 <script src="https://cdn.tailwindcss.com"></script>
 
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -17,74 +17,75 @@ body{background:#f0faff}
 .screen.active{display:flex;flex-direction:column;justify-content:center;min-height:65vh}
 </style>
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#06b6d4">
 </head>
+
 <body class="min-h-screen flex items-center justify-center p-4">
 
 <div class="w-full max-w-md bg-white rounded-[24px] shadow-xl p-6">
 
-<!-- MENU -->
 <div id="menu" class="screen active text-center">
 <h1 class="text-2xl font-bold text-blue-600 mb-6">Vocabulary Trainer</h1>
-<button id="startPractice" class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4 active:scale-95 transition">Start Practice</button>
-<button id="manageWords" class="w-full bg-blue-500 text-white py-3 rounded-xl mb-4 active:scale-95 transition">Manage Word List</button>
-<button id="showStats" class="w-full bg-cyan-600 text-white py-3 rounded-xl active:scale-95 transition">Progress</button>
-<div class="text-center text-sm text-gray-500 mt-6">
+
+<button id="startPractice" class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4">Start Practice</button>
+<button id="manageWords" class="w-full bg-blue-500 text-white py-3 rounded-xl mb-4">Manage Word List</button>
+<button id="showStats" class="w-full bg-cyan-600 text-white py-3 rounded-xl">Progress</button>
+
+<div class="text-sm text-gray-500 mt-6">
 <div>Total Words: <span id="totalWords">0</span></div>
 <div>Hard Words: <span id="hardWords">0</span></div>
 </div>
 </div>
 
-<!-- WORD MANAGEMENT -->
 <div id="manage" class="screen">
 <h2 class="text-lg font-bold mb-3 text-center">Import Words</h2>
+
 <textarea id="bulkWords" class="w-full border rounded-lg p-2 h-24 mb-3" placeholder="comma or new line separated"></textarea>
-<button id="importWords" class="w-full bg-cyan-500 text-white py-2 rounded-lg mb-4 active:scale-95">Import</button>
+
+<button id="importWords" class="w-full bg-cyan-500 text-white py-2 rounded-lg mb-4">Import</button>
+
 <div id="wordList" class="max-h-48 overflow-y-auto text-sm mb-4"></div>
-<button id="backMenu" class="w-full bg-gray-200 py-2 rounded-lg active:scale-95">Back</button>
+
+<button id="backMenu" class="w-full bg-gray-200 py-2 rounded-lg">Back</button>
 </div>
 
-<!-- PREVIEW -->
 <div id="preview" class="screen text-center">
 <h2 class="text-lg font-bold mb-4">Preview Words</h2>
 <div id="previewList" class="mb-4"></div>
-<button id="beginDictation" class="w-full bg-cyan-500 text-white py-3 rounded-xl active:scale-95">Start Dictation</button>
+<button id="beginDictation" class="w-full bg-cyan-500 text-white py-3 rounded-xl">Start Dictation</button>
 </div>
 
-<!-- DICTATION -->
 <div id="dictation" class="screen text-center">
 <div id="dictWord" class="text-3xl font-bold text-blue-600 mb-6"></div>
-<button id="nextWord" class="w-full bg-cyan-500 text-white py-3 rounded-xl active:scale-95">Next</button>
+<button id="nextWord" class="w-full bg-cyan-500 text-white py-3 rounded-xl">Next</button>
 </div>
 
-<!-- REVIEW -->
 <div id="review" class="screen">
 <div id="reviewList" class="space-y-2 mb-4"></div>
 <button id="finish" disabled class="w-full bg-blue-500 text-white py-3 rounded-xl opacity-50">Save & Finish</button>
 </div>
 
-<!-- RESULTS -->
 <div id="results" class="screen text-center">
-<div class="mb-6">
-<div id="score" class="text-2xl font-bold text-blue-600 mb-2"></div>
-<p>Well done! See you tomorrow!</p>
-</div>
-<img id="rewardImage" class="w-full h-72 object-contain">
-<button id="backHome" class="w-full mt-6 bg-cyan-500 text-white py-3 rounded-xl active:scale-95">Back to Menu</button>
-</div>
-
-<!-- STATS -->
-<div id="stats" class="screen text-center">
-<h2 class="text-xl font-bold text-blue-600 mb-4">Progress</h2>
-<canvas id="chart" height="200"></canvas>
-<button id="statsBack" class="w-full mt-6 bg-gray-200 py-2 rounded-lg">Back</button>
+<div id="score" class="text-2xl font-bold text-blue-600 mb-4"></div>
+<button id="backHome" class="w-full bg-cyan-500 text-white py-3 rounded-xl">Back to Menu</button>
 </div>
 
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded",()=>{
+
+const firebaseConfig={
+apiKey:"AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
+authDomain:"vocabtrainer-969fd.firebaseapp.com",
+databaseURL:"https://vocabtrainer-969fd-default-rtdb.europe-west1.firebasedatabase.app",
+projectId:"vocabtrainer-969fd",
+storageBucket:"vocabtrainer-969fd.appspot.com",
+messagingSenderId:"991443793775",
+appId:"1:991443793775:web:0d044609e2b3eb4e611a9a"
+}
+
+firebase.initializeApp(firebaseConfig)
+
+let db=firebase.database()
 
 let words=[]
 let history=[]
@@ -92,202 +93,148 @@ let practice=[]
 let marks={}
 let current=0
 
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
-  authDomain: "vocabtrainer-969fd.firebaseapp.com",
-  databaseURL: "https://vocabtrainer-969fd-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "vocabtrainer-969fd",
-  storageBucket: "vocabtrainer-969fd.appspot.com",
-  messagingSenderId: "991443793775",
-  appId: "1:991443793775:web:0d044609e2b3eb4e611a9a"
-};
+firebase.auth().signInAnonymously().then(loadData)
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+function loadData(){
 
-// Авторизация единственного пользователя
-firebase.auth().signInWithEmailAndPassword("zdorovilo.ulia@gmail.com","chuKcha67")
-.then(user=>{
-  console.log("Signed in:",user.user.email)
-  initApp()
+db.ref("words").on("value",snap=>{
+words=snap.val()||[]
+updateStats()
 })
-.catch(err=>{
-  console.error(err.code,err.message)
-});
 
-function initApp(){
+db.ref("history").on("value",snap=>{
+history=snap.val()||[]
+})
 
-function saveToFirebase(){
-  firebase.database().ref("words").set(words)
-  firebase.database().ref("history").set(history)
-}
-
-function saveLocal(){
-  localStorage.setItem("words",JSON.stringify(words))
-  localStorage.setItem("history",JSON.stringify(history))
 }
 
 function show(id){
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"))
-  document.getElementById(id).classList.add("active")
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"))
+document.getElementById(id).classList.add("active")
 }
 
-function today(){ return Math.floor(Date.now()/86400000) }
+function today(){return Math.floor(Date.now()/86400000)}
 
-// Hard words теперь считаются по ошибкам
 function updateStats(){
-  document.getElementById("totalWords").textContent=words.length
-  let hard=words.filter(w=>w.mistakes>0).length
-  document.getElementById("hardWords").textContent=hard
+document.getElementById("totalWords").textContent=words.length
+let hard=words.filter(w=>w.interval===1).length
+document.getElementById("hardWords").textContent=hard
 }
 
-// Load from Firebase
-firebase.database().ref("words").once("value").then(snap=>{if(snap.val()) words=snap.val(); updateStats()})
-firebase.database().ref("history").once("value").then(snap=>{if(snap.val()) history=snap.val()})
+function save(){
+db.ref("words").set(words)
+db.ref("history").set(history)
+}
 
-// START PRACTICE
-document.getElementById("startPractice").addEventListener("click",()=>{
-  if(words.length===0)return
-  practice=words.filter(w=>!w.due || w.due<=today())
-  while(practice.length<10) practice.push(words[Math.floor(Math.random()*words.length)])
-  practice=practice.slice(0,10)
-  let list=document.getElementById("previewList")
-  list.innerHTML=""
-  practice.forEach(w=>{list.innerHTML+=`<div>${w.text}</div>`})
-  show("preview")
-})
+function getPractice(){
+let due=words.filter(w=>!w.due||w.due<=today())
+while(due.length<10 && words.length>0){
+due.push(words[Math.floor(Math.random()*words.length)])
+}
+return due.slice(0,10)
+}
 
-// DICTATION
-document.getElementById("beginDictation").addEventListener("click",()=>{
-  current=0
-  document.getElementById("dictWord").textContent=practice[current].text
-  show("dictation")
-})
-document.getElementById("nextWord").addEventListener("click",()=>{
-  current++
-  if(current<practice.length){
-    document.getElementById("dictWord").textContent=practice[current].text
-  }else{ buildReview() }
-})
+document.getElementById("startPractice").onclick=()=>{
+if(words.length===0)return
+practice=getPractice()
+let list=document.getElementById("previewList")
+list.innerHTML=""
+practice.forEach(w=>list.innerHTML+=`<div>${w.text}</div>`)
+show("preview")
+}
 
-// REVIEW
+document.getElementById("beginDictation").onclick=()=>{
+current=0
+document.getElementById("dictWord").textContent=practice[current].text
+show("dictation")
+}
+
+document.getElementById("nextWord").onclick=()=>{
+current++
+if(current<practice.length){
+document.getElementById("dictWord").textContent=practice[current].text
+}else buildReview()
+}
+
 function buildReview(){
-  marks={}
-  let box=document.getElementById("reviewList")
-  box.innerHTML=""
-  practice.forEach((w,i)=>{
-    let row=document.createElement("div")
-    row.className="flex justify-between items-center"
-    row.innerHTML=`
-    <span>${w.text}</span>
-    <div class="flex border rounded-lg overflow-hidden">
-      <button class="good px-3 py-1 text-green-600">✓</button>
-      <button class="bad px-3 py-1 text-red-600">✕</button>
-    </div>
-    `
-    const good=row.querySelector(".good")
-    const bad=row.querySelector(".bad")
-    good.addEventListener("click",()=>{
-      marks[i]="good"
-      good.classList.add("bg-green-500","text-white")
-      bad.classList.remove("bg-red-500","text-white")
-      checkFinish()
-    })
-    bad.addEventListener("click",()=>{
-      marks[i]="bad"
-      bad.classList.add("bg-red-500","text-white")
-      good.classList.remove("bg-green-500","text-white")
-      checkFinish()
-    })
-    box.appendChild(row)
-  })
-  show("review")
-}
-function checkFinish(){
-  if(Object.keys(marks).length===practice.length){
-    let btn=document.getElementById("finish")
-    btn.disabled=false
-    btn.classList.remove("opacity-50")
-  }
-}
-
-// FINISH
-document.getElementById("finish").addEventListener("click",()=>{
-  let score=0
-  practice.forEach((w,i)=>{
-    if(!w.interval) w.interval=1
-    if(!w.ease) w.ease=2.5
-    if(!w.mistakes) w.mistakes=0
-    if(marks[i]==="good"){
-      score++
-      w.interval=Math.round(w.interval*w.ease)
-      w.ease+=0.1
-      w.mistakes=Math.max(0,w.mistakes-1) // уменьшаем ошибки, если угадала
-    }else{
-      w.interval=1
-      w.ease=Math.max(1.3,w.ease-0.2)
-      w.mistakes++
-    }
-    w.due=today()+w.interval
-  })
-  history.push({date:today(),score:score})
-  if(history.length>30) history.shift()
-  saveLocal()
-  saveToFirebase()
-  updateStats()
-  document.getElementById("score").textContent=`Score: ${score}/10`
-  const rewardImages=["1.png","2.png","3.png","4.png","5.png"]
-  let img=rewardImages[Math.floor(Math.random()*rewardImages.length)]
-  document.getElementById("rewardImage").src=img
-  show("results")
+marks={}
+let box=document.getElementById("reviewList")
+box.innerHTML=""
+practice.forEach((w,i)=>{
+let row=document.createElement("div")
+row.className="flex justify-between"
+row.innerHTML=`<span>${w.text}</span>
+<div>
+<button class="good text-green-600 px-2">✓</button>
+<button class="bad text-red-600 px-2">✕</button>
+</div>`
+row.querySelector(".good").onclick=()=>{marks[i]=1;check()}
+row.querySelector(".bad").onclick=()=>{marks[i]=0;check()}
+box.appendChild(row)
 })
-
-// WORD MANAGEMENT
-document.getElementById("manageWords").addEventListener("click",()=>{renderWordList(); show("manage")})
-function renderWordList(){
-  let list=document.getElementById("wordList")
-  list.innerHTML=""
-  words.forEach((w,i)=>{
-    let row=document.createElement("div")
-    row.className="flex justify-between mb-1"
-    row.innerHTML=`<span>${w.text}</span><button class="text-red-500">✕</button>`
-    row.querySelector("button").addEventListener("click",()=>{
-      words.splice(i,1)
-      saveLocal(); saveToFirebase()
-      renderWordList(); updateStats()
-    })
-    list.appendChild(row)
-  })
+show("review")
 }
-document.getElementById("importWords").addEventListener("click",()=>{
-  let text=document.getElementById("bulkWords").value
-  text.split(/[\n,]/).map(w=>w.trim()).filter(Boolean).forEach(w=>{
-    words.push({text:w,interval:1,ease:2.5,due:today(),mistakes:0})
-  })
-  document.getElementById("bulkWords").value=""
-  saveLocal(); saveToFirebase()
-  renderWordList(); updateStats()
-})
 
-// STATS
-document.getElementById("showStats").addEventListener("click",()=>{drawChart(); show("stats")})
-function drawChart(){
-  let canvas=document.getElementById("chart"), ctx=canvas.getContext("2d")
-  ctx.clearRect(0,0,canvas.width,canvas.height)
-  let w=canvas.width,h=canvas.height,max=10
-  history.forEach((d,i)=>{
-    let x=i*(w/30)
-    let bar=h*(d.score/max)
-    ctx.fillStyle="#06b6d4"
-    ctx.fillRect(x,h-bar,8,bar)
-  })
+function check(){
+if(Object.keys(marks).length===practice.length){
+let btn=document.getElementById("finish")
+btn.disabled=false
+btn.classList.remove("opacity-50")
 }
-document.getElementById("statsBack").addEventListener("click",()=>show("menu"))
-document.getElementById("backMenu").addEventListener("click",()=>show("menu"))
-document.getElementById("backHome").addEventListener("click",()=>show("menu"))
+}
 
+document.getElementById("finish").onclick=()=>{
+let score=0
+practice.forEach((w,i)=>{
+if(!w.interval)w.interval=1
+if(marks[i]){score++;w.interval*=2}else{w.interval=1}
+w.due=today()+w.interval
 })
+history.push({date:today(),score})
+if(history.length>30)history.shift()
+save()
+updateStats()
+document.getElementById("score").textContent=`Score ${score}/10`
+show("results")
+}
+
+document.getElementById("manageWords").onclick=()=>{
+renderWords()
+show("manage")
+}
+
+function renderWords(){
+let box=document.getElementById("wordList")
+box.innerHTML=""
+words.forEach((w,i)=>{
+let row=document.createElement("div")
+row.className="flex justify-between"
+row.innerHTML=`<span>${w.text}</span><button class="text-red-500">✕</button>`
+row.querySelector("button").onclick=()=>{
+words.splice(i,1)
+save()
+renderWords()
+updateStats()
+}
+box.appendChild(row)
+})
+}
+
+document.getElementById("importWords").onclick=()=>{
+let text=document.getElementById("bulkWords").value
+text.split(/[\n,]/).map(w=>w.trim()).filter(Boolean).forEach(w=>{
+words.push({text:w,interval:1,due:today()})
+})
+document.getElementById("bulkWords").value=""
+save()
+renderWords()
+updateStats()
+}
+
+document.getElementById("backMenu").onclick=()=>show("menu")
+document.getElementById("backHome").onclick=()=>show("menu")
+document.getElementById("showStats").onclick=()=>alert("Progress saved for last 30 sessions.")
+
 </script>
 
 </body>
