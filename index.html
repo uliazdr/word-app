@@ -1,239 +1,205 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vocab Trainer</title>
 
-<script src="https://cdn.tailwindcss.com"></script>
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
 <style>
-body{background:#f0faff}
-.screen{display:none}
-.screen.active{display:flex;flex-direction:column;justify-content:center;min-height:65vh}
+body{
+font-family:Arial;
+text-align:center;
+background:#f5f5f5;
+padding:40px;
+}
+
+button{
+padding:14px;
+margin:8px;
+font-size:16px;
+width:220px;
+border:none;
+border-radius:8px;
+background:#2d7ef7;
+color:white;
+}
+
+button:hover{
+opacity:0.9;
+}
+
+input{
+padding:10px;
+margin:6px;
+font-size:16px;
+width:220px;
+}
+
+#screen{
+margin-top:30px;
+}
 </style>
 
 </head>
 
-<body class="min-h-screen flex items-center justify-center p-4">
+<body>
 
-<div class="w-full max-w-md bg-white rounded-[24px] shadow-xl p-6">
+<h2>Vocab Trainer</h2>
 
-<div id="menu" class="screen active text-center">
-<h1 class="text-2xl font-bold text-blue-600 mb-6">Vocabulary Trainer</h1>
+<div id="login">
 
-<button id="startPractice" class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4">Start Practice</button>
-<button id="manageWords" class="w-full bg-blue-500 text-white py-3 rounded-xl mb-4">Manage Word List</button>
-<button id="showStats" class="w-full bg-cyan-600 text-white py-3 rounded-xl">Progress</button>
+<input id="email" placeholder="email"><br>
+<input id="password" type="password" placeholder="password"><br>
 
-<div class="text-sm text-gray-500 mt-6">
-<div>Total Words: <span id="totalWords">0</span></div>
-<div>Hard Words: <span id="hardWords">0</span></div>
-</div>
+<button onclick="login()">Login</button>
+
 </div>
 
-<div id="manage" class="screen">
-<h2 class="text-lg font-bold mb-3 text-center">Import Words</h2>
+<div id="app" style="display:none">
 
-<textarea id="bulkWords" class="w-full border rounded-lg p-2 h-24 mb-3" placeholder="comma or new line separated"></textarea>
+<button onclick="startDictation()">Start dictation</button><br>
+<button onclick="showWords()">Manage word list</button><br>
+<button onclick="showProgress()">Progress</button>
 
-<button id="importWords" class="w-full bg-cyan-500 text-white py-2 rounded-lg mb-4">Import</button>
-
-<div id="wordList" class="max-h-48 overflow-y-auto text-sm mb-4"></div>
-
-<button id="backMenu" class="w-full bg-gray-200 py-2 rounded-lg">Back</button>
-</div>
-
-<div id="preview" class="screen text-center">
-<h2 class="text-lg font-bold mb-4">Preview Words</h2>
-<div id="previewList" class="mb-4"></div>
-<button id="beginDictation" class="w-full bg-cyan-500 text-white py-3 rounded-xl">Start Dictation</button>
-</div>
-
-<div id="dictation" class="screen text-center">
-<div id="dictWord" class="text-3xl font-bold text-blue-600 mb-6"></div>
-<button id="nextWord" class="w-full bg-cyan-500 text-white py-3 rounded-xl">Next</button>
-</div>
-
-<div id="review" class="screen">
-<div id="reviewList" class="space-y-2 mb-4"></div>
-<button id="finish" disabled class="w-full bg-blue-500 text-white py-3 rounded-xl opacity-50">Save & Finish</button>
-</div>
-
-<div id="results" class="screen text-center">
-<div id="score" class="text-2xl font-bold text-blue-600 mb-4"></div>
-<button id="backHome" class="w-full bg-cyan-500 text-white py-3 rounded-xl">Back to Menu</button>
-</div>
+<div id="screen"></div>
 
 </div>
 
 <script>
 
-const firebaseConfig={
-apiKey:"AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
-authDomain:"vocabtrainer-969fd.firebaseapp.com",
-databaseURL:"https://vocabtrainer-969fd-default-rtdb.europe-west1.firebasedatabase.app",
-projectId:"vocabtrainer-969fd",
-storageBucket:"vocabtrainer-969fd.appspot.com",
-messagingSenderId:"991443793775",
-appId:"1:991443793775:web:0d044609e2b3eb4e611a9a"
-}
+const firebaseConfig = {
+apiKey: "API_KEY",
+authDomain: "vocabtrainer-969fd.firebaseapp.com",
+databaseURL: "https://vocabtrainer-969fd-default-rtdb.europe-west1.firebasedatabase.app",
+projectId: "vocabtrainer-969fd"
+};
 
-firebase.initializeApp(firebaseConfig)
+firebase.initializeApp(firebaseConfig);
 
-let db=firebase.database()
+const auth = firebase.auth();
+const db = firebase.database();
 
-let words=[]
-let history=[]
-let practice=[]
-let marks={}
-let current=0
+let words = [];
 
-firebase.auth().signInAnonymously().then(loadData)
+auth.onAuthStateChanged(user => {
 
-function loadData(){
+if(user){
 
-db.ref("words").on("value",snap=>{
-words=snap.val()||[]
-updateStats()
-})
+document.getElementById("login").style.display="none";
+document.getElementById("app").style.display="block";
 
-db.ref("history").on("value",snap=>{
-history=snap.val()||[]
-})
+loadWords();
 
 }
 
-function show(id){
-document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"))
-document.getElementById(id).classList.add("active")
+});
+
+function login(){
+
+const email=document.getElementById("email").value;
+const pass=document.getElementById("password").value;
+
+auth.signInWithEmailAndPassword(email,pass);
+
 }
 
-function today(){return Math.floor(Date.now()/86400000)}
+function loadWords(){
 
-function updateStats(){
-document.getElementById("totalWords").textContent=words.length
-let hard=words.filter(w=>w.interval===1).length
-document.getElementById("hardWords").textContent=hard
-}
+db.ref("words").once("value").then(snap=>{
 
-function save(){
-db.ref("words").set(words)
-db.ref("history").set(history)
+const data=snap.val();
+
+if(!data){
+words=[];
+return;
 }
 
-function getPractice(){
-let due=words.filter(w=>!w.due||w.due<=today())
-while(due.length<10 && words.length>0){
-due.push(words[Math.floor(Math.random()*words.length)])
-}
-return due.slice(0,10)
+words=Object.values(data);
+
+console.log("words loaded",words);
+
+});
+
 }
 
-document.getElementById("startPractice").onclick=()=>{
-if(words.length===0)return
-practice=getPractice()
-let list=document.getElementById("previewList")
-list.innerHTML=""
-practice.forEach(w=>list.innerHTML+=`<div>${w.text}</div>`)
-show("preview")
+function startDictation(){
+
+if(words.length===0){
+
+document.getElementById("screen").innerHTML="No words in database";
+return;
+
 }
 
-document.getElementById("beginDictation").onclick=()=>{
-current=0
-document.getElementById("dictWord").textContent=practice[current].text
-show("dictation")
+let w=words[Math.floor(Math.random()*words.length)];
+
+document.getElementById("screen").innerHTML=
+
+"<h3>"+w.text+"</h3>"+
+"<button onclick='markWrong()'>Wrong</button>"+
+"<button onclick='markRight()'>Correct</button>";
+
 }
 
-document.getElementById("nextWord").onclick=()=>{
-current++
-if(current<practice.length){
-document.getElementById("dictWord").textContent=practice[current].text
-}else buildReview()
+function markWrong(){
+
+document.getElementById("screen").innerHTML="marked wrong";
+
 }
 
-function buildReview(){
-marks={}
-let box=document.getElementById("reviewList")
-box.innerHTML=""
-practice.forEach((w,i)=>{
-let row=document.createElement("div")
-row.className="flex justify-between"
-row.innerHTML=`<span>${w.text}</span>
-<div>
-<button class="good text-green-600 px-2">✓</button>
-<button class="bad text-red-600 px-2">✕</button>
-</div>`
-row.querySelector(".good").onclick=()=>{marks[i]=1;check()}
-row.querySelector(".bad").onclick=()=>{marks[i]=0;check()}
-box.appendChild(row)
-})
-show("review")
+function markRight(){
+
+document.getElementById("screen").innerHTML="marked correct";
+
 }
 
-function check(){
-if(Object.keys(marks).length===practice.length){
-let btn=document.getElementById("finish")
-btn.disabled=false
-btn.classList.remove("opacity-50")
-}
+function showWords(){
+
+db.ref("words").once("value").then(snap=>{
+
+let data=snap.val();
+
+let html="<h3>Word list</h3>";
+
+for(let id in data){
+
+html+=data[id].text+"<br>";
+
 }
 
-document.getElementById("finish").onclick=()=>{
-let score=0
-practice.forEach((w,i)=>{
-if(!w.interval)w.interval=1
-if(marks[i]){score++;w.interval*=2}else{w.interval=1}
-w.due=today()+w.interval
-})
-history.push({date:today(),score})
-if(history.length>30)history.shift()
-save()
-updateStats()
-document.getElementById("score").textContent=`Score ${score}/10`
-show("results")
+document.getElementById("screen").innerHTML=html;
+
+});
+
 }
 
-document.getElementById("manageWords").onclick=()=>{
-renderWords()
-show("manage")
+function showProgress(){
+
+db.ref("history").once("value").then(snap=>{
+
+let data=snap.val();
+
+if(!data){
+document.getElementById("screen").innerHTML="No history yet";
+return;
 }
 
-function renderWords(){
-let box=document.getElementById("wordList")
-box.innerHTML=""
-words.forEach((w,i)=>{
-let row=document.createElement("div")
-row.className="flex justify-between"
-row.innerHTML=`<span>${w.text}</span><button class="text-red-500">✕</button>`
-row.querySelector("button").onclick=()=>{
-words.splice(i,1)
-save()
-renderWords()
-updateStats()
-}
-box.appendChild(row)
-})
+let html="<h3>History</h3>";
+
+for(let id in data){
+
+html+=data[id].date+" : "+data[id].score+"<br>";
+
 }
 
-document.getElementById("importWords").onclick=()=>{
-let text=document.getElementById("bulkWords").value
-text.split(/[\n,]/).map(w=>w.trim()).filter(Boolean).forEach(w=>{
-words.push({text:w,interval:1,due:today()})
-})
-document.getElementById("bulkWords").value=""
-save()
-renderWords()
-updateStats()
-}
+document.getElementById("screen").innerHTML=html;
 
-document.getElementById("backMenu").onclick=()=>show("menu")
-document.getElementById("backHome").onclick=()=>show("menu")
-document.getElementById("showStats").onclick=()=>alert("Progress saved for last 30 sessions.")
+});
+
+}
 
 </script>
 
