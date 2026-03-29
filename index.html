@@ -8,14 +8,14 @@
     <style>
         body { background-color: #f0faff; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; color: #1e293b; }
         .card { background: white; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
-        .btn { cursor: pointer; border-radius: 16px; font-weight: 700; transition: all 0.1s active; display: flex; align-items: center; justify-content: center; }
+        .btn { cursor: pointer; border-radius: 16px; font-weight: 700; transition: all 0.1s active; display: flex; align-items: center; justify-content: center; border: none; outline: none; }
         .btn:active { transform: scale(0.96); opacity: 0.8; }
         .btn-cyan { background-color: #06b6d4; color: white; }
         .btn-light { background-color: #e0f2fe; color: #0369a1; }
         .btn-ok { background-color: #22c55e; color: white; }
         .btn-no { background-color: #ef4444; color: white; }
         .btn-gray { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
-        .selected { outline: 4px solid #0ea5e9; transform: scale(1.05); }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body class="p-4 flex flex-col min-h-screen">
@@ -27,15 +27,15 @@
                 <p class="text-blue-400 font-medium">Ready for practice?</p>
             </div>
             <div class="space-y-4">
-                <button onclick="prepareSession()" class="w-full h-24 btn btn-cyan text-2xl shadow-lg">Start Practice</button>
-                <button onclick="showScreen('screen-settings')" class="w-full h-14 btn btn-light text-lg">Manage Word List</button>
+                <button id="btn-start-session" class="w-full h-24 btn btn-cyan text-2xl shadow-lg">Start Practice</button>
+                <button id="btn-to-settings" class="w-full h-14 btn btn-light text-lg">Manage Word List</button>
             </div>
         </div>
 
         <div id="screen-preview" class="hidden space-y-6 pt-4">
             <h2 class="text-2xl font-bold text-center">Today's Words (10)</h2>
             <div id="preview-list" class="card p-6 space-y-2 text-xl text-cyan-800 font-medium"></div>
-            <button onclick="startDictation()" class="w-full h-16 btn btn-cyan text-xl">I'm ready, let's go!</button>
+            <button id="btn-confirm-start" class="w-full h-16 btn btn-cyan text-xl">I'm ready, let's go!</button>
         </div>
 
         <div id="screen-dictation" class="hidden space-y-8 pt-10 text-center">
@@ -43,13 +43,13 @@
                 <div id="active-word" class="text-5xl font-black text-slate-800">Word</div>
                 <div id="counter" class="mt-4 text-cyan-500 font-bold uppercase tracking-widest text-xs">1 OF 10</div>
             </div>
-            <button onclick="nextWord()" class="w-full h-20 btn btn-cyan text-xl shadow-md">Next Word →</button>
+            <button id="btn-next-word" class="w-full h-20 btn btn-cyan text-xl shadow-md">Next Word →</button>
         </div>
 
         <div id="screen-review" class="hidden space-y-4 pb-20">
             <h2 class="text-2xl font-bold text-center mb-4">Check Results</h2>
             <div id="review-list" class="space-y-3"></div>
-            <button id="finish-btn" onclick="saveResults()" class="w-full h-16 btn btn-cyan text-xl mt-6 opacity-50" disabled>Save & Finish</button>
+            <button id="finish-btn" class="w-full h-16 btn btn-cyan text-xl mt-6 opacity-50" disabled>Save & Finish</button>
         </div>
 
         <div id="screen-result" class="hidden space-y-8 text-center pt-10">
@@ -66,26 +66,26 @@
                 </svg>
             </div>
             <div>
-                <div id="score-text" class="text-7xl font-black text-cyan-600 italic">8/10</div>
+                <div id="score-text" class="text-7xl font-black text-cyan-600 italic">0/10</div>
                 <p class="text-2xl font-bold text-slate-700 mt-4 leading-tight">Well done!<br>See you tomorrow!</p>
             </div>
-            <button onclick="showScreen('screen-menu')" class="w-full h-14 btn btn-light">Back to Menu</button>
+            <button id="btn-back-home-result" class="w-full h-14 btn btn-light">Back to Menu</button>
         </div>
 
         <div id="screen-settings" class="hidden space-y-6 pt-4">
             <div class="card p-6">
                 <h2 class="font-bold mb-2">Import Words</h2>
                 <textarea id="import-box" class="w-full p-4 border rounded-xl h-32 focus:ring-2 ring-cyan-200 outline-none" placeholder="apple, banana, dog..."></textarea>
-                <button onclick="importWords()" class="w-full h-12 mt-3 btn btn-cyan">Add All</button>
+                <button id="btn-do-import" class="w-full h-12 mt-3 btn btn-cyan">Add All</button>
             </div>
             <div class="card p-6 pb-2">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="font-bold">Database (<span id="total-count">0</span>)</h2>
-                    <button onclick="resetAll()" class="text-red-400 text-xs font-bold">RESET ALL</button>
+                    <h2 class="font-bold text-sm">Database (<span id="total-count">0</span>)</h2>
+                    <button id="btn-reset-all" class="text-red-400 text-[10px] font-bold uppercase">RESET ALL</button>
                 </div>
                 <div id="full-list" class="max-h-60 overflow-y-auto space-y-2 pb-4"></div>
             </div>
-            <button onclick="showScreen('screen-menu')" class="w-full h-14 btn btn-gray">Back Home</button>
+            <button id="btn-back-home-settings" class="w-full h-14 btn btn-gray">Back Home</button>
         </div>
 
     </div>
@@ -96,16 +96,77 @@
     </div>
 
     <script>
-        // DATA LAYER
-        let database = JSON.parse(localStorage.getItem('vocab_db_v4') || '[]');
-        let sessionWords = [];
-        let currentIndex = 0;
-        let results = {}; // key: index, value: boolean
+        document.addEventListener('DOMContentLoaded', () => {
+            let database = [];
+            try {
+                database = JSON.parse(localStorage.getItem('vocab_db_final_v5') || '[]');
+            } catch(e) { database = []; }
 
-        function saveDb() {
-            localStorage.setItem('vocab_db_v4', JSON.stringify(database));
-            updateStats();
-        }
+            let sessionWords = [];
+            let currentIndex = 0;
+            let results = {};
 
-        function showScreen(id) {
-            ["screen-menu", "screen-preview", "screen-dictation", "
+            const screens = ["screen-menu", "screen-preview", "screen-dictation", "screen-review", "screen-result", "screen-settings"];
+
+            function showScreen(targetId) {
+                screens.forEach(id => {
+                    document.getElementById(id).classList.add('hidden');
+                });
+                document.getElementById(targetId).classList.remove('hidden');
+                window.scrollTo(0,0);
+            }
+
+            function updateStats() {
+                const hard = database.filter(w => w.w > 5).length;
+                const total = database.length;
+                document.getElementById('total-count').innerText = total;
+                document.getElementById('footer-total').innerText = `TOTAL: ${total} WORDS`;
+                document.getElementById('footer-hard').innerText = `HARD: ${hard} WORDS`;
+                
+                const list = document.getElementById('full-list');
+                list.innerHTML = database.sort((a,b) => b.w - a.w).map(w => `
+                    <div class="flex justify-between p-2 bg-slate-50 rounded-lg text-sm mb-2 border border-slate-100">
+                        <span>${w.t} ${w.w > 5 ? '⚠️' : ''}</span>
+                        <button class="delete-btn text-red-300 px-2 font-bold" data-word="${w.t}">×</button>
+                    </div>
+                `).join('');
+
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const wordToDelete = e.target.getAttribute('data-word');
+                        database = database.filter(w => w.t !== wordToDelete);
+                        saveDb();
+                    });
+                });
+            }
+
+            function saveDb() {
+                localStorage.setItem('vocab_db_final_v5', JSON.stringify(database));
+                updateStats();
+            }
+
+            // КНОПКИ УПРАВЛЕНИЯ
+            document.getElementById('btn-start-session').addEventListener('click', () => {
+                if (database.length < 2) return alert("Add at least 2 words first!");
+                sessionWords = [...database]
+                    .sort((a,b) => (b.w + Math.random()*25) - (a.w + Math.random()*25))
+                    .slice(0, 10);
+                document.getElementById('preview-list').innerHTML = sessionWords.map((w, i) => `<div>${i+1}. ${w.t}</div>`).join('');
+                showScreen('screen-preview');
+            });
+
+            document.getElementById('btn-to-settings').addEventListener('click', () => showScreen('screen-settings'));
+            document.getElementById('btn-back-home-settings').addEventListener('click', () => showScreen('screen-menu'));
+            document.getElementById('btn-back-home-result').addEventListener('click', () => showScreen('screen-menu'));
+            
+            document.getElementById('btn-confirm-start').addEventListener('click', () => {
+                currentIndex = 0;
+                results = {};
+                showScreen('screen-dictation');
+                renderDictation();
+            });
+
+            function renderDictation() {
+                document.getElementById('active-word').innerText = sessionWords[currentIndex].t;
+                document.getElementById('counter').innerText = `${currentIndex + 1} OF ${sessionWords.length}`;
+            }
