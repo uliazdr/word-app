@@ -1,156 +1,593 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>Vocab Trainer</title>
+
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <style>
-body{background:#f0faff;}
-.screen{display:none;}
-.screen.active{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:65vh;}
-.word-item{display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:4px;}
+
+body{
+background:#f0faff
+}
+
+.screen{
+display:none
+}
+
+.screen.active{
+display:flex;
+flex-direction:column;
+justify-content:center;
+min-height:65vh
+}
+
 </style>
+
+<!-- PWA -->
+
 <link rel="manifest" href="manifest.json">
+
 <meta name="theme-color" content="#06b6d4">
+
 </head>
+
+
 <body class="min-h-screen flex items-center justify-center p-4">
+
 <div class="w-full max-w-md bg-white rounded-[24px] shadow-xl p-6">
 
-  <!-- Start Screen -->
-  <div id="startScreen" class="screen active flex flex-col gap-4">
-    <h1 class="text-2xl font-bold text-blue-500">Vocab Trainer</h1>
-    <button id="startPracticeBtn" class="bg-cyan-500 hover:bg-cyan-600 text-white py-3 rounded-lg active:scale-95 transition">Start Practice</button>
-    <button id="manageWordsBtn" class="bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg active:scale-95 transition">Manage Word List</button>
-    <button id="showProgressBtn" class="bg-teal-400 hover:bg-teal-500 text-white py-2 rounded-lg active:scale-95 transition mt-2">📊 Progress</button>
-    <div class="mt-4 flex justify-between w-full text-sm">
-      <span>Total Words: <span id="totalWords">0</span></span>
-      <span>Hard Words: <span id="hardWords">0</span></span>
-    </div>
-  </div>
+<!-- MENU -->
 
-  <!-- Manage Words Screen -->
-  <div id="manageScreen" class="screen flex flex-col gap-4 w-full">
-    <h2 class="text-xl font-bold text-blue-500">Manage Words</h2>
-    <textarea id="wordInput" class="border p-2 w-full h-32 rounded-lg" placeholder="Add words, one per line"></textarea>
-    <button id="saveWordsBtn" class="bg-cyan-500 hover:bg-cyan-600 text-white py-2 rounded-lg active:scale-95 transition">Save & Add</button>
-    <div id="wordList" class="overflow-y-auto max-h-48 mt-2 w-full"></div>
-    <button id="backFromManage" class="bg-gray-300 text-black py-2 rounded-lg active:scale-95 transition mt-2">Back</button>
-  </div>
+<div id="menu" class="screen active text-center">
 
-  <!-- Progress Placeholder -->
-  <div id="progressScreen" class="screen flex flex-col gap-4 w-full">
-    <h2 class="text-xl font-bold text-blue-500">Progress Over Time</h2>
-    <canvas id="progressChart"></canvas>
-    <button id="backFromProgress" class="bg-gray-300 text-black py-2 rounded-lg active:scale-95 transition mt-2">Back</button>
-  </div>
+<h1 class="text-2xl font-bold text-blue-600 mb-6">
+Vocabulary Trainer
+</h1>
+
+<button id="startPractice"
+class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4 active:scale-95 transition">
+Start Practice
+</button>
+
+<button id="manageWords"
+class="w-full bg-blue-500 text-white py-3 rounded-xl mb-4 active:scale-95 transition">
+Manage Word List
+</button>
+
+<button id="showStats"
+class="w-full bg-cyan-600 text-white py-3 rounded-xl active:scale-95 transition">
+Progress
+</button>
+
+<div class="text-center text-sm text-gray-500 mt-6">
+
+<div>Total Words: <span id="totalWords">0</span></div>
+<div>Hard Words: <span id="hardWords">0</span></div>
 
 </div>
 
+</div>
+
+
+<!-- WORD MANAGEMENT -->
+
+<div id="manage" class="screen">
+
+<h2 class="text-lg font-bold mb-3 text-center">Import Words</h2>
+
+<textarea id="bulkWords"
+class="w-full border rounded-lg p-2 h-24 mb-3"
+placeholder="comma or new line separated"></textarea>
+
+<button id="importWords"
+class="w-full bg-cyan-500 text-white py-2 rounded-lg mb-4 active:scale-95">
+Import
+</button>
+
+<div id="wordList"
+class="max-h-48 overflow-y-auto text-sm mb-4"></div>
+
+<button id="backMenu"
+class="w-full bg-gray-200 py-2 rounded-lg active:scale-95">
+Back
+</button>
+
+</div>
+
+
+<!-- PREVIEW -->
+
+<div id="preview" class="screen text-center">
+
+<h2 class="text-lg font-bold mb-4">
+Preview Words
+</h2>
+
+<div id="previewList" class="mb-4"></div>
+
+<button id="beginDictation"
+class="w-full bg-cyan-500 text-white py-3 rounded-xl active:scale-95">
+Start Dictation
+</button>
+
+</div>
+
+
+<!-- DICTATION -->
+
+<div id="dictation" class="screen text-center">
+
+<div id="dictWord"
+class="text-3xl font-bold text-blue-600 mb-6"></div>
+
+<button id="nextWord"
+class="w-full bg-cyan-500 text-white py-3 rounded-xl active:scale-95">
+Next
+</button>
+
+</div>
+
+
+<!-- REVIEW -->
+
+<div id="review" class="screen">
+
+<div id="reviewList"
+class="space-y-2 mb-4"></div>
+
+<button id="finish"
+disabled
+class="w-full bg-blue-500 text-white py-3 rounded-xl opacity-50">
+Save & Finish
+</button>
+
+</div>
+
+
+<!-- RESULTS -->
+
+<div id="results" class="screen text-center">
+
+<div class="mb-6">
+
+<div id="score"
+class="text-2xl font-bold text-blue-600 mb-2"></div>
+
+<p>Well done! See you tomorrow!</p>
+
+</div>
+
+<img id="rewardImage"
+class="w-full h-72 object-contain">
+
+<button id="backHome"
+class="w-full mt-6 bg-cyan-500 text-white py-3 rounded-xl active:scale-95">
+Back to Menu
+</button>
+
+</div>
+
+
+<!-- STATS -->
+
+<div id="stats" class="screen text-center">
+
+<h2 class="text-xl font-bold text-blue-600 mb-4">
+Progress
+</h2>
+
+<canvas id="chart" height="200"></canvas>
+
+<button id="statsBack"
+class="w-full mt-6 bg-gray-200 py-2 rounded-lg">
+Back
+</button>
+
+</div>
+
+</div>
+
+
 <script>
-// Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
-  authDomain: "vocabtrainer-969fd.firebaseapp.com",
-  databaseURL: "https://vocabtrainer-969fd-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "vocabtrainer-969fd",
-  storageBucket: "vocabtrainer-969fd.appspot.com",
-  messagingSenderId: "991443793775",
-  appId: "1:991443793775:web:0d044609e2b3eb4e611a9a"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
 
-// Screens
-const startScreen = document.getElementById("startScreen");
-const manageScreen = document.getElementById("manageScreen");
-const progressScreen = document.getElementById("progressScreen");
+document.addEventListener("DOMContentLoaded",()=>{
 
-// Buttons
-const startPracticeBtn = document.getElementById("startPracticeBtn");
-const manageWordsBtn = document.getElementById("manageWordsBtn");
-const showProgressBtn = document.getElementById("showProgressBtn");
-const backFromManage = document.getElementById("backFromManage");
-const backFromProgress = document.getElementById("backFromProgress");
+let words=JSON.parse(localStorage.getItem("words")||"[]")
+let history=JSON.parse(localStorage.getItem("history")||"[]")
 
-// Manage Words
-const wordInput = document.getElementById("wordInput");
-const saveWordsBtn = document.getElementById("saveWordsBtn");
-const wordList = document.getElementById("wordList");
+let practice=[]
+let marks={}
+let current=0
 
-// Show/Hide
-function showScreen(screen){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  screen.classList.add('active');
+function save(){
+localStorage.setItem("words",JSON.stringify(words))
+localStorage.setItem("history",JSON.stringify(history))
 }
 
-// Load words from Firebase
-function loadWords(){
-  db.ref('words').once('value', snapshot=>{
-    const data = snapshot.val() || [];
-    wordList.innerHTML = '';
-    let hardCount = 0;
-    data.forEach((w,i)=>{
-      const div = document.createElement('div');
-      div.className = 'word-item';
-      div.innerHTML = `
-        <span>${w.text}</span>
-        <button data-index="${i}" class="deleteWordBtn text-red-500 font-bold">X</button>
-      `;
-      wordList.appendChild(div);
-      if(w.interval>3) hardCount++;
-    });
-    document.getElementById('totalWords').textContent = data.length;
-    document.getElementById('hardWords').textContent = hardCount;
+function show(id){
 
-    document.querySelectorAll('.deleteWordBtn').forEach(btn=>{
-      btn.addEventListener('click', e=>{
-        const idx = parseInt(e.target.dataset.index);
-        data.splice(idx,1);
-        db.ref('words').set(data);
-        loadWords();
-      });
-    });
-  });
+document.querySelectorAll(".screen")
+.forEach(s=>s.classList.remove("active"))
+
+document.getElementById(id)
+.classList.add("active")
+
 }
 
-// Save words
-saveWordsBtn.addEventListener('click', function() {
-  const lines = wordInput.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-  if(lines.length === 0){
-    alert("Please enter at least one word");
-    return;
-  }
-  db.ref('words').once('value', snapshot => {
-    const data = snapshot.val() || [];
-    lines.forEach(t => {
-      if(!data.some(w=>w.text===t)){
-        data.push({text: t, interval:1, ease:2.5, due: Math.floor(Date.now()/86400000)});
-      }
-    });
-    db.ref('words').set(data, err=>{
-      if(err){
-        alert("Error saving words: "+err);
-      } else {
-        wordInput.value = '';
-        loadWords();
-        alert("Words added successfully!");
-      }
-    });
-  });
-});
+function today(){
+return Math.floor(Date.now()/86400000)
+}
 
-// Buttons
-startPracticeBtn.addEventListener('click', ()=>{ alert('Practice starts!'); });
-manageWordsBtn.addEventListener('click', ()=>{ showScreen(manageScreen); loadWords(); });
-showProgressBtn.addEventListener('click', ()=>{ showScreen(progressScreen); });
-backFromManage.addEventListener('click', ()=>showScreen(startScreen));
-backFromProgress.addEventListener('click', ()=>showScreen(startScreen));
+function updateStats(){
 
-// Load initial
-loadWords();
+document.getElementById("totalWords").textContent=words.length
+
+let hard=words.filter(w=>w.interval>7).length
+
+document.getElementById("hardWords").textContent=hard
+
+}
+
+updateStats()
+
+
+/* REWARD IMAGES */
+
+const rewardImages=[
+"1.png",
+"2.png",
+"3.png",
+"4.png",
+"5.png"
+]
+
+
+/* SPACED REPETITION */
+
+function getPracticeWords(){
+
+let due=words.filter(w=>!w.due || w.due<=today())
+
+let result=[...due]
+
+while(result.length<10){
+
+result.push(words[Math.floor(Math.random()*words.length)])
+
+}
+
+return result.slice(0,10)
+
+}
+
+
+/* START PRACTICE */
+
+document.getElementById("startPractice")
+.addEventListener("click",()=>{
+
+if(words.length===0)return
+
+practice=getPracticeWords()
+
+let list=document.getElementById("previewList")
+
+list.innerHTML=""
+
+practice.forEach(w=>{
+list.innerHTML+=`<div>${w.text}</div>`
+})
+
+show("preview")
+
+})
+
+
+/* DICTATION */
+
+document.getElementById("beginDictation")
+.addEventListener("click",()=>{
+
+current=0
+
+document.getElementById("dictWord")
+.textContent=practice[current].text
+
+show("dictation")
+
+})
+
+
+document.getElementById("nextWord")
+.addEventListener("click",()=>{
+
+current++
+
+if(current<practice.length){
+
+document.getElementById("dictWord")
+.textContent=practice[current].text
+
+}else{
+
+buildReview()
+
+}
+
+})
+
+
+/* REVIEW */
+
+function buildReview(){
+
+marks={}
+
+let box=document.getElementById("reviewList")
+
+box.innerHTML=""
+
+practice.forEach((w,i)=>{
+
+let row=document.createElement("div")
+
+row.className="flex justify-between items-center"
+
+row.innerHTML=`
+<span>${w.text}</span>
+
+<div class="flex border rounded-lg overflow-hidden">
+
+<button class="good px-3 py-1 text-green-600">✓</button>
+<button class="bad px-3 py-1 text-red-600">✕</button>
+
+</div>
+`
+
+const good=row.querySelector(".good")
+const bad=row.querySelector(".bad")
+
+good.addEventListener("click",()=>{
+
+marks[i]="good"
+
+good.classList.add("bg-green-500","text-white")
+bad.classList.remove("bg-red-500","text-white")
+
+checkFinish()
+
+})
+
+bad.addEventListener("click",()=>{
+
+marks[i]="bad"
+
+bad.classList.add("bg-red-500","text-white")
+good.classList.remove("bg-green-500","text-white")
+
+checkFinish()
+
+})
+
+box.appendChild(row)
+
+})
+
+show("review")
+
+}
+
+function checkFinish(){
+
+if(Object.keys(marks).length===practice.length){
+
+let btn=document.getElementById("finish")
+
+btn.disabled=false
+btn.classList.remove("opacity-50")
+
+}
+
+}
+
+
+/* FINISH */
+
+document.getElementById("finish")
+.addEventListener("click",()=>{
+
+let score=0
+
+practice.forEach((w,i)=>{
+
+if(!w.interval)w.interval=1
+if(!w.ease)w.ease=2.5
+
+if(marks[i]==="good"){
+
+score++
+
+w.interval=Math.round(w.interval*w.ease)
+w.ease+=0.1
+
+}else{
+
+w.interval=1
+w.ease=Math.max(1.3,w.ease-0.2)
+
+}
+
+w.due=today()+w.interval
+
+})
+
+history.push({
+date:today(),
+score:score
+})
+
+if(history.length>30)history.shift()
+
+save()
+
+updateStats()
+
+document.getElementById("score")
+.textContent=`Score: ${score}/10`
+
+let img=rewardImages[Math.floor(Math.random()*rewardImages.length)]
+
+document.getElementById("rewardImage").src=img
+
+show("results")
+
+})
+
+
+/* WORD MANAGEMENT */
+
+document.getElementById("manageWords")
+.addEventListener("click",()=>{
+
+renderWordList()
+
+show("manage")
+
+})
+
+function renderWordList(){
+
+let list=document.getElementById("wordList")
+
+list.innerHTML=""
+
+words.forEach((w,i)=>{
+
+let row=document.createElement("div")
+
+row.className="flex justify-between mb-1"
+
+row.innerHTML=`
+<span>${w.text}</span>
+<button class="text-red-500">✕</button>
+`
+
+row.querySelector("button")
+.addEventListener("click",()=>{
+
+words.splice(i,1)
+
+save()
+renderWordList()
+updateStats()
+
+})
+
+list.appendChild(row)
+
+})
+
+}
+
+
+document.getElementById("importWords")
+.addEventListener("click",()=>{
+
+let text=document.getElementById("bulkWords").value
+
+text.split(/[\n,]/)
+.map(w=>w.trim())
+.filter(Boolean)
+.forEach(w=>words.push({text:w,interval:1,ease:2.5,due:today()}))
+
+document.getElementById("bulkWords").value=""
+
+save()
+renderWordList()
+updateStats()
+
+})
+
+
+/* STATS CHART */
+
+document.getElementById("showStats")
+.addEventListener("click",()=>{
+
+drawChart()
+
+show("stats")
+
+})
+
+function drawChart(){
+
+let canvas=document.getElementById("chart")
+let ctx=canvas.getContext("2d")
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+let w=canvas.width
+let h=canvas.height
+
+let max=10
+
+history.forEach((d,i)=>{
+
+let x=i*(w/30)
+
+let bar=h*(d.score/max)
+
+ctx.fillStyle="#06b6d4"
+
+ctx.fillRect(x,h-bar,8,bar)
+
+})
+
+}
+
+
+document.getElementById("statsBack")
+.addEventListener("click",()=>show("menu"))
+
+document.getElementById("backMenu")
+.addEventListener("click",()=>show("menu"))
+
+document.getElementById("backHome")
+.addEventListener("click",()=>show("menu"))
+
+})
+
 </script>
+
+
+<!-- SIMPLE PWA SERVICE WORKER -->
+
+<script>
+
+if('serviceWorker' in navigator){
+
+navigator.serviceWorker.register(
+URL.createObjectURL(new Blob([`
+
+self.addEventListener('install',e=>{
+self.skipWaiting()
+})
+
+self.addEventListener('fetch',e=>{
+e.respondWith(fetch(e.request))
+})
+
+`],{type:'text/javascript'}))
+
+}
+
+</script>
+
 </body>
 </html>
