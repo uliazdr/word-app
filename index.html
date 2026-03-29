@@ -28,9 +28,11 @@ body{background:#f0faff}
 <!-- MENU -->
 <div id="menu" class="screen active text-center">
 <h1 class="text-2xl font-bold text-blue-600 mb-6">Vocabulary Trainer</h1>
+
 <button id="startPractice" class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4 active:scale-95 transition">Start Practice</button>
 <button id="manageWords" class="w-full bg-blue-500 text-white py-3 rounded-xl mb-4 active:scale-95 transition">Manage Word List</button>
 <button id="showStats" class="w-full bg-cyan-600 text-white py-3 rounded-xl active:scale-95 transition">Progress</button>
+
 <div class="text-center text-sm text-gray-500 mt-6">
 <div>Total Words: <span id="totalWords">0</span></div>
 <div>Hard Words: <span id="hardWords">0</span></div>
@@ -40,8 +42,10 @@ body{background:#f0faff}
 <!-- WORD MANAGEMENT -->
 <div id="manage" class="screen">
 <h2 class="text-lg font-bold mb-3 text-center">Import Words</h2>
+
 <textarea id="bulkWords" class="w-full border rounded-lg p-2 h-24 mb-3" placeholder="comma or new line separated"></textarea>
 <button id="importWords" class="w-full bg-cyan-500 text-white py-2 rounded-lg mb-4 active:scale-95">Import</button>
+
 <div id="wordList" class="max-h-48 overflow-y-auto text-sm mb-4"></div>
 <button id="backMenu" class="w-full bg-gray-200 py-2 rounded-lg active:scale-95">Back</button>
 </div>
@@ -87,208 +91,230 @@ body{background:#f0faff}
 <script>
 document.addEventListener("DOMContentLoaded",()=>{
 
-// Firebase config
+// ----------------- FIREBASE -----------------
 const firebaseConfig = {
-apiKey: "AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
-authDomain: "vocabtrainer-969fd.firebaseapp.com",
-databaseURL: "https://vocabtrainer-969fd-default-rtdb.europe-west1.firebasedatabase.app",
-projectId: "vocabtrainer-969fd",
-storageBucket: "vocabtrainer-969fd.appspot.com",
-messagingSenderId: "991443793775",
-appId: "1:991443793775:web:0d044609e2b3eb4e611a9a"
+  apiKey: "AIzaSyDTViLnfX1ZZQpGjS2ptVc0F9-lCsuGqM8",
+  authDomain: "vocabtrainer-969fd.firebaseapp.com",
+  databaseURL: "https://vocabtrainer-969fd-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "vocabtrainer-969fd",
+  storageBucket: "vocabtrainer-969fd.appspot.com",
+  messagingSenderId: "991443793775",
+  appId: "1:991443793775:web:0d044609e2b3eb4e611a9a"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let words=[], history=[], practice=[], marks={}, current=0
+// ----------------- VARIABLES -----------------
+let words = [];
+let history = [];
+let practice = [];
+let marks = {};
+let current = 0;
 
-// Load words/history from Firebase
-db.ref("words").once("value").then(snapshot=>{
-  if(snapshot.exists()) words = snapshot.val()
-  updateStats()
-})
-db.ref("history").once("value").then(snapshot=>{
-  if(snapshot.exists()) history = snapshot.val()
-})
+// ----------------- HELPERS -----------------
+function today(){ return Math.floor(Date.now()/86400000); }
 
-// Save to Firebase
-function save(){
-  db.ref("words").set(words)
-  db.ref("history").set(history)
-}
-
-// Show/hide screens
 function show(id){
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"))
-  document.getElementById(id).classList.add("active")
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 }
 
-// Today as number of days
-function today(){ return Math.floor(Date.now()/86400000) }
-
-// Update stats
 function updateStats(){
-  document.getElementById("totalWords").textContent=words.length
-  let hard=words.filter(w=>w.interval>7).length
-  document.getElementById("hardWords").textContent=hard
+  document.getElementById("totalWords").textContent = words.length;
+  let hard = words.filter(w=>w.interval>7).length;
+  document.getElementById("hardWords").textContent = hard;
 }
 
-/* Reward Images */
-const rewardImages=["1.png","2.png","3.png","4.png","5.png"]
+// ----------------- FIREBASE SYNC -----------------
+function loadData(){
+  db.ref('words').once('value').then(snap=>{
+    const data = snap.val()||{};
+    words = Object.values(data);
+    updateStats();
+  });
+  db.ref('history').once('value').then(snap=>{
+    const data = snap.val()||{};
+    history = Object.values(data);
+  });
+}
 
-/* Spaced repetition & practice words */
+function saveWords(){
+  let obj = {};
+  words.forEach((w,i)=>{ obj[i]=w; });
+  db.ref('words').set(obj);
+}
+
+function saveHistory(){
+  let obj = {};
+  history.forEach((h,i)=>{ obj[i]=h; });
+  db.ref('history').set(obj);
+}
+
+// ----------------- REWARD IMAGES -----------------
+const rewardImages=["1.png","2.png","3.png","4.png","5.png"];
+
+// ----------------- SPACED REPETITION -----------------
 function getPracticeWords(){
-  let due=words.filter(w=>!w.due || w.due<=today())
-  let result=[...due]
-  while(result.length<10) result.push(words[Math.floor(Math.random()*words.length)])
-  return result.slice(0,10)
+  let due=words.filter(w=>!w.due || w.due<=today());
+  let result=[...due];
+  while(result.length<10 && words.length>0){
+    result.push(words[Math.floor(Math.random()*words.length)]);
+  }
+  return result.slice(0,10);
 }
 
-/* START PRACTICE */
+// ----------------- EVENT LISTENERS -----------------
+// Start Practice
 document.getElementById("startPractice").addEventListener("click",()=>{
-  if(words.length===0) return
-  practice=getPracticeWords()
-  let list=document.getElementById("previewList")
-  list.innerHTML=""
-  practice.forEach(w=>list.innerHTML+=`<div>${w.text}</div>`)
-  show("preview")
-})
+  if(words.length===0) return;
+  practice = getPracticeWords();
+  let list=document.getElementById("previewList");
+  list.innerHTML="";
+  practice.forEach(w=>{ list.innerHTML+=`<div>${w.text}</div>`; });
+  show("preview");
+});
 
-/* DICTATION */
+// Begin Dictation
 document.getElementById("beginDictation").addEventListener("click",()=>{
-  current=0
-  document.getElementById("dictWord").textContent=practice[current].text
-  show("dictation")
-})
-document.getElementById("nextWord").addEventListener("click",()=>{
-  current++
-  if(current<practice.length){
-    document.getElementById("dictWord").textContent=practice[current].text
-  } else { buildReview() }
-})
+  current=0;
+  document.getElementById("dictWord").textContent = practice[current].text;
+  show("dictation");
+});
 
-/* REVIEW */
+// Next Word
+document.getElementById("nextWord").addEventListener("click",()=>{
+  current++;
+  if(current<practice.length){
+    document.getElementById("dictWord").textContent = practice[current].text;
+  }else{
+    buildReview();
+  }
+});
+
+// Build Review
 function buildReview(){
-  marks={}
-  let box=document.getElementById("reviewList")
-  box.innerHTML=""
+  marks={};
+  let box=document.getElementById("reviewList");
+  box.innerHTML="";
   practice.forEach((w,i)=>{
-    let row=document.createElement("div")
-    row.className="flex justify-between items-center"
+    let row=document.createElement("div");
+    row.className="flex justify-between items-center";
     row.innerHTML=`
       <span>${w.text}</span>
       <div class="flex border rounded-lg overflow-hidden">
         <button class="good px-3 py-1 text-green-600">✓</button>
         <button class="bad px-3 py-1 text-red-600">✕</button>
-      </div>
-    `
-    const good=row.querySelector(".good")
-    const bad=row.querySelector(".bad")
+      </div>`;
+    const good=row.querySelector(".good");
+    const bad=row.querySelector(".bad");
     good.addEventListener("click",()=>{
-      marks[i]="good"
-      good.classList.add("bg-green-500","text-white")
-      bad.classList.remove("bg-red-500","text-white")
-      checkFinish()
-    })
+      marks[i]="good"; good.classList.add("bg-green-500","text-white"); bad.classList.remove("bg-red-500","text-white"); checkFinish();
+    });
     bad.addEventListener("click",()=>{
-      marks[i]="bad"
-      bad.classList.add("bg-red-500","text-white")
-      good.classList.remove("bg-green-500","text-white")
-      checkFinish()
-    })
-    box.appendChild(row)
-  })
-  show("review")
+      marks[i]="bad"; bad.classList.add("bg-red-500","text-white"); good.classList.remove("bg-green-500","text-white"); checkFinish();
+    });
+    box.appendChild(row);
+  });
+  show("review");
 }
 
 function checkFinish(){
   if(Object.keys(marks).length===practice.length){
-    let btn=document.getElementById("finish")
-    btn.disabled=false
-    btn.classList.remove("opacity-50")
+    let btn=document.getElementById("finish");
+    btn.disabled=false;
+    btn.classList.remove("opacity-50");
   }
 }
 
-/* FINISH */
+// Finish Dictation
 document.getElementById("finish").addEventListener("click",()=>{
-  let score=0
+  let score=0;
   practice.forEach((w,i)=>{
-    if(!w.interval) w.interval=1
-    if(!w.ease) w.ease=2.5
+    if(!w.interval) w.interval=1;
+    if(!w.ease) w.ease=2.5;
     if(marks[i]==="good"){
-      score++
-      w.interval=Math.round(w.interval*w.ease)
-      w.ease+=0.1
-    } else {
-      w.interval=1
-      w.ease=Math.max(1.3,w.ease-0.2)
+      score++;
+      w.interval=Math.round(w.interval*w.ease);
+      w.ease+=0.1;
+    }else{
+      w.interval=1;
+      w.ease=Math.max(1.3,w.ease-0.2);
     }
-    w.due=today()+w.interval
-  })
-  history.push({date:today(),score:score})
-  if(history.length>30) history.shift()
-  save()
-  updateStats()
-  document.getElementById("score").textContent=`Score: ${score}/10`
-  let img=rewardImages[Math.floor(Math.random()*rewardImages.length)]
-  document.getElementById("rewardImage").src=img
-  show("results")
-})
+    w.due=today()+w.interval;
+  });
+  history.push({date:today(),score:score});
+  if(history.length>30) history.shift();
+  saveWords();
+  saveHistory();
+  updateStats();
+  document.getElementById("score").textContent=`Score: ${score}/10`;
+  let img=rewardImages[Math.floor(Math.random()*rewardImages.length)];
+  document.getElementById("rewardImage").src=img;
+  show("results");
+});
 
-/* WORD MANAGEMENT */
+// Word Management
 document.getElementById("manageWords").addEventListener("click",()=>{
-  renderWordList()
-  show("manage")
-})
+  renderWordList();
+  show("manage");
+});
+
 function renderWordList(){
-  let list=document.getElementById("wordList")
-  list.innerHTML=""
+  let list=document.getElementById("wordList");
+  list.innerHTML="";
   words.forEach((w,i)=>{
-    let row=document.createElement("div")
-    row.className="flex justify-between mb-1"
-    row.innerHTML=`<span>${w.text}</span><button class="text-red-500">✕</button>`
+    let row=document.createElement("div");
+    row.className="flex justify-between mb-1";
+    row.innerHTML=`<span>${w.text}</span><button class="text-red-500">✕</button>`;
     row.querySelector("button").addEventListener("click",()=>{
-      words.splice(i,1)
-      save()
-      renderWordList()
-      updateStats()
-    })
-    list.appendChild(row)
-  })
+      words.splice(i,1);
+      saveWords();
+      renderWordList();
+      updateStats();
+    });
+    list.appendChild(row);
+  });
 }
+
 document.getElementById("importWords").addEventListener("click",()=>{
-  let text=document.getElementById("bulkWords").value
+  let text=document.getElementById("bulkWords").value;
   text.split(/[\n,]/).map(w=>w.trim()).filter(Boolean).forEach(w=>{
-    words.push({text:w,interval:1,ease:2.5,due:today()})
-  })
-  document.getElementById("bulkWords").value=""
-  save()
-  renderWordList()
-  updateStats()
-})
+    words.push({text:w,interval:1,ease:2.5,due:today()});
+  });
+  document.getElementById("bulkWords").value="";
+  saveWords();
+  renderWordList();
+  updateStats();
+});
 
-/* STATS CHART */
+// Stats Chart
 document.getElementById("showStats").addEventListener("click",()=>{
-  drawChart()
-  show("stats")
-})
-function drawChart(){
-  let canvas=document.getElementById("chart")
-  let ctx=canvas.getContext("2d")
-  ctx.clearRect(0,0,canvas.width,canvas.height)
-  let w=canvas.width, h=canvas.height, max=10
-  history.forEach((d,i)=>{
-    let x=i*(w/30)
-    let bar=h*(d.score/max)
-    ctx.fillStyle="#06b6d4"
-    ctx.fillRect(x,h-bar,8,bar)
-  })
-}
-document.getElementById("statsBack").addEventListener("click",()=>show("menu"))
-document.getElementById("backMenu").addEventListener("click",()=>show("menu"))
-document.getElementById("backHome").addEventListener("click",()=>show("menu"))
+  drawChart();
+  show("stats");
+});
 
-})
+function drawChart(){
+  let canvas=document.getElementById("chart");
+  let ctx=canvas.getContext("2d");
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  let w=canvas.width, h=canvas.height, max=10;
+  history.forEach((d,i)=>{
+    let x=i*(w/30);
+    let bar=h*(d.score/max);
+    ctx.fillStyle="#06b6d4";
+    ctx.fillRect(x,h-bar,8,bar);
+  });
+}
+
+document.getElementById("statsBack").addEventListener("click",()=>show("menu"));
+document.getElementById("backMenu").addEventListener("click",()=>show("menu"));
+document.getElementById("backHome").addEventListener("click",()=>show("menu"));
+
+// ----------------- INITIAL LOAD -----------------
+loadData();
+
+}); // DOMContentLoaded
 </script>
 
 </body>
