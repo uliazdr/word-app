@@ -1,172 +1,484 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vocab Trainer PRO</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #f0faff; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; color: #1e293b; }
-        .card { background: white; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
-        .btn { cursor: pointer; border-radius: 16px; font-weight: 700; transition: all 0.1s active; display: flex; align-items: center; justify-content: center; border: none; outline: none; }
-        .btn:active { transform: scale(0.96); opacity: 0.8; }
-        .btn-cyan { background-color: #06b6d4; color: white; }
-        .btn-light { background-color: #e0f2fe; color: #0369a1; }
-        .btn-ok { background-color: #22c55e; color: white; }
-        .btn-no { background-color: #ef4444; color: white; }
-        .btn-gray { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
-        .hidden { display: none !important; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vocabulary Trainer</title>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="p-4 flex flex-col min-h-screen">
-    <div id="app" class="max-w-md mx-auto w-full flex-grow">
-        
-        <div id="screen-menu" class="space-y-8 pt-8">
-            <div class="text-center">
-                <h1 class="text-4xl font-black text-cyan-600 tracking-tight">Vocab<span class="text-blue-500">Trainer</span></h1>
-                <p class="text-blue-400 font-medium">Ready for practice?</p>
-            </div>
-            <div class="space-y-4">
-                <button id="btn-start-session" class="w-full h-24 btn btn-cyan text-2xl shadow-lg">Start Practice</button>
-                <button id="btn-to-settings" class="w-full h-14 btn btn-light text-lg">Manage Word List</button>
-            </div>
-        </div>
 
-        <div id="screen-preview" class="hidden space-y-6 pt-4">
-            <h2 class="text-2xl font-bold text-center">Today's Words (10)</h2>
-            <div id="preview-list" class="card p-6 space-y-2 text-xl text-cyan-800 font-medium"></div>
-            <button id="btn-confirm-start" class="w-full h-16 btn btn-cyan text-xl">I'm ready, let's go!</button>
-        </div>
+<body class="bg-[#f0faff] min-h-screen flex items-center justify-center p-4 font-sans">
 
-        <div id="screen-dictation" class="hidden space-y-8 pt-10 text-center">
-            <div class="card p-12 border-2 border-cyan-100">
-                <div id="active-word" class="text-5xl font-black text-slate-800">Word</div>
-                <div id="counter" class="mt-4 text-cyan-500 font-bold uppercase tracking-widest text-xs">1 OF 10</div>
-            </div>
-            <button id="btn-next-word" class="w-full h-20 btn btn-cyan text-xl shadow-md">Next Word →</button>
-        </div>
+<div class="w-full max-w-md">
 
-        <div id="screen-review" class="hidden space-y-4 pb-20">
-            <h2 class="text-2xl font-bold text-center mb-4">Check Results</h2>
-            <div id="review-list" class="space-y-3"></div>
-            <button id="finish-btn" class="w-full h-16 btn btn-cyan text-xl mt-6 opacity-50" disabled>Save & Finish</button>
-        </div>
+<!-- MAIN CARD -->
+<div class="bg-white rounded-[22px] shadow-xl p-6">
 
-        <div id="screen-result" class="hidden space-y-8 text-center pt-10">
-            <div class="flex justify-center">
-                <svg width="150" height="150" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="50" cy="55" r="35" fill="white" stroke="#06b6d4" stroke-width="3"/>
-                    <path d="M25 35L15 10L40 25" fill="white" stroke="#06b6d4" stroke-width="3"/>
-                    <path d="M75 35L85 10L60 25" fill="white" stroke="#06b6d4" stroke-width="3"/>
-                    <circle cx="38" cy="50" r="3" fill="#333"/>
-                    <circle cx="62" cy="50" r="3" fill="#333"/>
-                    <path d="M45 65C45 65 50 68 55 65" stroke="#333" stroke-width="2" stroke-linecap="round"/>
-                    <circle cx="30" cy="62" r="4" fill="#FDA4AF" opacity="0.6"/>
-                    <circle cx="70" cy="62" r="4" fill="#FDA4AF" opacity="0.6"/>
-                </svg>
-            </div>
-            <div>
-                <div id="score-text" class="text-7xl font-black text-cyan-600 italic">0/10</div>
-                <p class="text-2xl font-bold text-slate-700 mt-4 leading-tight">Well done!<br>See you tomorrow!</p>
-            </div>
-            <button id="btn-back-home-result" class="w-full h-14 btn btn-light">Back to Menu</button>
-        </div>
+<!-- ================= MAIN MENU ================= -->
+<div id="screenMenu">
 
-        <div id="screen-settings" class="hidden space-y-6 pt-4">
-            <div class="card p-6">
-                <h2 class="font-bold mb-2">Import Words</h2>
-                <textarea id="import-box" class="w-full p-4 border rounded-xl h-32 focus:ring-2 ring-cyan-200 outline-none" placeholder="apple, banana, dog..."></textarea>
-                <button id="btn-do-import" class="w-full h-12 mt-3 btn btn-cyan">Add All</button>
-            </div>
-            <div class="card p-6 pb-2">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="font-bold text-sm">Database (<span id="total-count">0</span>)</h2>
-                    <button id="btn-reset-all" class="text-red-400 text-[10px] font-bold uppercase">RESET ALL</button>
-                </div>
-                <div id="full-list" class="max-h-60 overflow-y-auto space-y-2 pb-4"></div>
-            </div>
-            <button id="btn-back-home-settings" class="w-full h-14 btn btn-gray">Back Home</button>
-        </div>
+<h1 class="text-2xl font-bold text-center text-blue-600 mb-6">
+Vocabulary Trainer
+</h1>
 
-    </div>
+<div class="space-y-4">
 
-    <div class="max-w-md mx-auto w-full py-4 mt-4 border-t border-cyan-100 flex justify-between text-[10px] font-black uppercase tracking-tighter text-cyan-700 opacity-60">
-        <span id="footer-total">TOTAL: 0 WORDS</span>
-        <span id="footer-hard">HARD: 0 WORDS</span>
-    </div>
+<button id="startBtn"
+class="w-full bg-blue-500 text-white py-4 rounded-xl font-semibold active:scale-95 transition">
+Start Practice
+</button>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            let database = [];
-            try {
-                database = JSON.parse(localStorage.getItem('vocab_db_final_v5') || '[]');
-            } catch(e) { database = []; }
+<button id="manageBtn"
+class="w-full bg-cyan-600 text-white py-4 rounded-xl font-semibold active:scale-95 transition">
+Manage Word List
+</button>
 
-            let sessionWords = [];
-            let currentIndex = 0;
-            let results = {};
+</div>
 
-            const screens = ["screen-menu", "screen-preview", "screen-dictation", "screen-review", "screen-result", "screen-settings"];
+<div class="mt-8 text-center text-sm text-gray-600">
+<div>Total Words: <span id="statTotal">0</span></div>
+<div>Hard Words: <span id="statHard">0</span></div>
+</div>
 
-            function showScreen(targetId) {
-                screens.forEach(id => {
-                    document.getElementById(id).classList.add('hidden');
-                });
-                document.getElementById(targetId).classList.remove('hidden');
-                window.scrollTo(0,0);
-            }
+</div>
 
-            function updateStats() {
-                const hard = database.filter(w => w.w > 5).length;
-                const total = database.length;
-                document.getElementById('total-count').innerText = total;
-                document.getElementById('footer-total').innerText = `TOTAL: ${total} WORDS`;
-                document.getElementById('footer-hard').innerText = `HARD: ${hard} WORDS`;
-                
-                const list = document.getElementById('full-list');
-                list.innerHTML = database.sort((a,b) => b.w - a.w).map(w => `
-                    <div class="flex justify-between p-2 bg-slate-50 rounded-lg text-sm mb-2 border border-slate-100">
-                        <span>${w.t} ${w.w > 5 ? '⚠️' : ''}</span>
-                        <button class="delete-btn text-red-300 px-2 font-bold" data-word="${w.t}">×</button>
-                    </div>
-                `).join('');
 
-                document.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const wordToDelete = e.target.getAttribute('data-word');
-                        database = database.filter(w => w.t !== wordToDelete);
-                        saveDb();
-                    });
-                });
-            }
+<!-- ================= MANAGE WORDS ================= -->
+<div id="screenManage" class="hidden">
 
-            function saveDb() {
-                localStorage.setItem('vocab_db_final_v5', JSON.stringify(database));
-                updateStats();
-            }
+<h2 class="text-xl font-bold text-blue-600 mb-4 text-center">
+Manage Words
+</h2>
 
-            // КНОПКИ УПРАВЛЕНИЯ
-            document.getElementById('btn-start-session').addEventListener('click', () => {
-                if (database.length < 2) return alert("Add at least 2 words first!");
-                sessionWords = [...database]
-                    .sort((a,b) => (b.w + Math.random()*25) - (a.w + Math.random()*25))
-                    .slice(0, 10);
-                document.getElementById('preview-list').innerHTML = sessionWords.map((w, i) => `<div>${i+1}. ${w.t}</div>`).join('');
-                showScreen('screen-preview');
-            });
+<textarea id="bulkInput"
+placeholder="Paste words separated by comma or new line"
+class="w-full border rounded-xl p-3 mb-4 text-sm"></textarea>
 
-            document.getElementById('btn-to-settings').addEventListener('click', () => showScreen('screen-settings'));
-            document.getElementById('btn-back-home-settings').addEventListener('click', () => showScreen('screen-menu'));
-            document.getElementById('btn-back-home-result').addEventListener('click', () => showScreen('screen-menu'));
-            
-            document.getElementById('btn-confirm-start').addEventListener('click', () => {
-                currentIndex = 0;
-                results = {};
-                showScreen('screen-dictation');
-                renderDictation();
-            });
+<button id="importBtn"
+class="w-full bg-blue-500 text-white py-3 rounded-xl mb-4 active:scale-95 transition">
+Import Words
+</button>
 
-            function renderDictation() {
-                document.getElementById('active-word').innerText = sessionWords[currentIndex].t;
-                document.getElementById('counter').innerText = `${currentIndex + 1} OF ${sessionWords.length}`;
-            }
+<div id="wordList"
+class="max-h-60 overflow-y-auto border rounded-xl p-2 text-sm mb-4"></div>
+
+<button id="backFromManage"
+class="w-full bg-gray-300 py-3 rounded-xl active:scale-95 transition">
+Back
+</button>
+
+</div>
+
+
+<!-- ================= PREVIEW ================= -->
+<div id="screenPreview" class="hidden">
+
+<h2 class="text-xl font-bold text-blue-600 mb-4 text-center">
+Words Preview
+</h2>
+
+<ul id="previewList" class="list-disc pl-6 text-gray-700 mb-6"></ul>
+
+<button id="startDictationBtn"
+class="w-full bg-blue-500 text-white py-3 rounded-xl active:scale-95 transition">
+Start Dictation
+</button>
+
+</div>
+
+
+<!-- ================= DICTATION ================= -->
+<div id="screenDictation" class="hidden text-center">
+
+<div id="dictWord"
+class="text-3xl font-bold text-blue-600 mb-6"></div>
+
+<button id="nextWordBtn"
+class="w-full bg-cyan-600 text-white py-3 rounded-xl active:scale-95 transition">
+Next
+</button>
+
+</div>
+
+
+<!-- ================= REVIEW ================= -->
+<div id="screenReview" class="hidden">
+
+<h2 class="text-xl font-bold text-blue-600 mb-4 text-center">
+Review
+</h2>
+
+<div id="reviewList" class="space-y-2 mb-4"></div>
+
+<button id="finishBtn"
+disabled
+class="w-full bg-blue-500 text-white py-3 rounded-xl opacity-50 active:scale-95 transition">
+Save & Finish
+</button>
+
+</div>
+
+
+<!-- ================= RESULTS ================= -->
+<div id="screenResults" class="hidden text-center">
+
+<h2 class="text-2xl font-bold text-blue-600 mb-2">
+Results
+</h2>
+
+<div id="scoreText" class="text-lg mb-4"></div>
+
+<div class="flex justify-center mb-4">
+
+<svg width="120" height="120" viewBox="0 0 120 120">
+<circle cx="60" cy="60" r="50" fill="#22d3ee"/>
+<circle cx="40" cy="55" r="6"/>
+<circle cx="80" cy="55" r="6"/>
+<path d="M40 75 Q60 90 80 75" stroke="black" stroke-width="4" fill="none"/>
+<polygon points="30,20 45,40 20,40" fill="#22d3ee"/>
+<polygon points="90,20 75,40 100,40" fill="#22d3ee"/>
+</svg>
+
+</div>
+
+<p class="text-gray-700 mb-6">
+Well done! See you tomorrow!
+</p>
+
+<button id="backHomeBtn"
+class="w-full bg-blue-500 text-white py-3 rounded-xl active:scale-95 transition">
+Back to Menu
+</button>
+
+</div>
+
+</div>
+</div>
+
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", () => {
+
+const STORAGE_KEY = "vocabTrainerWords";
+
+let words = [];
+let practiceWords = [];
+let reviewMarks = {};
+let dictIndex = 0;
+
+
+
+function loadWords(){
+words = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+updateStats();
+renderWordList();
+}
+
+function saveWords(){
+localStorage.setItem(STORAGE_KEY, JSON.stringify(words));
+updateStats();
+}
+
+function updateStats(){
+
+document.getElementById("statTotal").textContent = words.length;
+
+const hard = words.filter(w=>w.weight>2).length;
+
+document.getElementById("statHard").textContent = hard;
+
+}
+
+
+
+function showScreen(id){
+
+document.querySelectorAll("[id^=screen]").forEach(s=>{
+s.classList.add("hidden");
+});
+
+document.getElementById(id).classList.remove("hidden");
+
+}
+
+
+
+function renderWordList(){
+
+const list = document.getElementById("wordList");
+list.innerHTML = "";
+
+words.forEach((w,i)=>{
+
+const row = document.createElement("div");
+
+row.className="flex justify-between items-center p-2";
+
+row.innerHTML=`
+<span>${w.text}</span>
+<button class="text-red-500">✕</button>
+`;
+
+row.querySelector("button").addEventListener("click",()=>{
+words.splice(i,1);
+saveWords();
+renderWordList();
+});
+
+list.appendChild(row);
+
+});
+
+}
+
+
+
+function importWords(){
+
+const raw = document.getElementById("bulkInput").value;
+
+const parts = raw.split(/[\n,]+/).map(w=>w.trim()).filter(Boolean);
+
+parts.forEach(w=>{
+words.push({text:w,weight:1});
+});
+
+saveWords();
+renderWordList();
+
+document.getElementById("bulkInput").value="";
+
+}
+
+
+
+function weightedRandom(){
+
+const pool=[];
+
+words.forEach(w=>{
+for(let i=0;i<w.weight;i++) pool.push(w);
+});
+
+const result=[];
+
+while(result.length<10 && pool.length){
+
+const pick = pool[Math.floor(Math.random()*pool.length)];
+
+if(!result.includes(pick)) result.push(pick);
+
+}
+
+return result;
+
+}
+
+
+
+function startPractice(){
+
+if(words.length<1) return;
+
+practiceWords = weightedRandom();
+
+showPreview();
+
+}
+
+
+
+function showPreview(){
+
+const ul = document.getElementById("previewList");
+
+ul.innerHTML="";
+
+practiceWords.forEach(w=>{
+const li=document.createElement("li");
+li.textContent=w.text;
+ul.appendChild(li);
+});
+
+showScreen("screenPreview");
+
+}
+
+
+
+function startDictation(){
+
+dictIndex=0;
+
+showScreen("screenDictation");
+
+showCurrentWord();
+
+}
+
+
+
+function showCurrentWord(){
+
+document.getElementById("dictWord").textContent = practiceWords[dictIndex].text;
+
+}
+
+
+
+function nextWord(){
+
+dictIndex++;
+
+if(dictIndex>=practiceWords.length){
+
+showReview();
+
+return;
+
+}
+
+showCurrentWord();
+
+}
+
+
+
+function showReview(){
+
+const list = document.getElementById("reviewList");
+
+list.innerHTML="";
+
+reviewMarks={};
+
+practiceWords.forEach((w,i)=>{
+
+const row=document.createElement("div");
+
+row.className="flex justify-between items-center";
+
+row.innerHTML=`
+<span>${w.text}</span>
+<div class="space-x-2">
+<button class="correct bg-green-500 text-white px-3 py-1 rounded">✓</button>
+<button class="wrong bg-red-500 text-white px-3 py-1 rounded">✕</button>
+</div>
+`;
+
+const correctBtn=row.querySelector(".correct");
+const wrongBtn=row.querySelector(".wrong");
+
+correctBtn.addEventListener("click",()=>{
+reviewMarks[i]="correct";
+updateFinish();
+});
+
+wrongBtn.addEventListener("click",()=>{
+reviewMarks[i]="wrong";
+updateFinish();
+});
+
+list.appendChild(row);
+
+});
+
+showScreen("screenReview");
+
+}
+
+
+
+function updateFinish(){
+
+const btn=document.getElementById("finishBtn");
+
+if(Object.keys(reviewMarks).length===practiceWords.length){
+
+btn.disabled=false;
+btn.classList.remove("opacity-50");
+
+}
+
+}
+
+
+
+function finishPractice(){
+
+let correct=0;
+
+practiceWords.forEach((w,i)=>{
+
+const mark=reviewMarks[i];
+
+const original = words.find(x=>x.text===w.text);
+
+if(mark==="correct"){
+
+correct++;
+original.weight=Math.max(1, original.weight-1);
+
+}else{
+
+original.weight+=2;
+
+}
+
+});
+
+saveWords();
+
+showResults(correct);
+
+}
+
+
+
+function showResults(score){
+
+document.getElementById("scoreText").textContent =
+score + " / " + practiceWords.length;
+
+showScreen("screenResults");
+
+}
+
+
+
+/* EVENT LISTENERS */
+
+document.getElementById("manageBtn").addEventListener("click",()=>{
+showScreen("screenManage");
+});
+
+document.getElementById("backFromManage").addEventListener("click",()=>{
+showScreen("screenMenu");
+});
+
+document.getElementById("importBtn").addEventListener("click",importWords);
+
+document.getElementById("startBtn").addEventListener("click",startPractice);
+
+document.getElementById("startDictationBtn").addEventListener("click",startDictation);
+
+document.getElementById("nextWordBtn").addEventListener("click",nextWord);
+
+document.getElementById("finishBtn").addEventListener("click",finishPractice);
+
+document.getElementById("backHomeBtn").addEventListener("click",()=>{
+showScreen("screenMenu");
+});
+
+
+
+loadWords();
+
+});
+
+</script>
+
+</body>
+</html>
