@@ -171,6 +171,13 @@ appId:"1:991443793775:web:0d044609e2b3eb4e611a9a"
 
 firebase.initializeApp(firebaseConfig)
 
+firebase.auth().onAuthStateChanged(user=>{
+  if(user){
+    loadData()
+    show("menu")
+  }
+})
+  
 // LOGIN
 
 document.getElementById("loginBtn").onclick=()=>{
