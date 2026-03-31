@@ -9,6 +9,8 @@
 
 <script src="https://cdn.tailwindcss.com"></script>
 
+<link href="https://fonts.googleapis.com/css2?family=Clicker+Script&display=swap" rel="stylesheet">
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -18,22 +20,46 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <style>
-body{background:#f0faff}
-.screen{display:none}
-.screen.active{display:flex;flex-direction:column;justify-content:center;min-height:65vh}
+
+body{
+background:#f0faff
+}
+
+.screen{
+display:none
+}
+
+.screen.active{
+display:flex;
+flex-direction:column;
+justify-content:center;
+min-height:65vh
+}
 
 .scoreBig{
 font-size:48px;
 font-weight:900;
-color:#06b6d4;
+color:#06b6d4
 }
 
 .resultText{
-font-size:28px;
-font-weight:900;
+
+font-family:'Clicker Script',cursive;
+
+font-size:48px;
+
+line-height:1.2;
+
 color:#0891b2;
-text-shadow:2px 2px 0 #fff,4px 4px 0 rgba(0,0,0,0.08)
+
+text-align:center;
+
+text-shadow:
+2px 2px 0 #ffffff,
+4px 4px 6px rgba(0,0,0,0.15)
+
 }
+
 </style>
 
 </head>
@@ -166,11 +192,13 @@ Save & Finish </button>
 
 <div id="results" class="screen text-center">
 
-<div id="score" class="scoreBig mb-2"></div>
+<div id="score" class="scoreBig mb-4"></div>
 
-<div class="resultText mb-4">
+<div class="resultText mb-6">
+
 Well done, Vera!<br>
 See you tomorrow!
+
 </div>
 
 <img id="rewardImage"
