@@ -1,48 +1,39 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-
 <title>Vocab Trainer</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <style>
-
 body{background:#f0faff}
-
 .screen{display:none}
-.screen.active{
-display:flex;
-flex-direction:column;
-justify-content:center;
-min-height:65vh
+.screen.active{display:flex;flex-direction:column;justify-content:center;min-height:65vh}
+
+.scoreBig{
+font-size:48px;
+font-weight:900;
+color:#06b6d4;
 }
 
-.resultTitle{
+.resultText{
 font-size:28px;
 font-weight:900;
 color:#0891b2;
-text-shadow:
-2px 2px 0 #ffffff,
-4px 4px 0 rgba(0,0,0,0.05);
+text-shadow:2px 2px 0 #fff,4px 4px 0 rgba(0,0,0,0.08)
 }
-
-.scoreBig{
-font-size:40px;
-font-weight:900;
-color:#06b6d4;
-margin-bottom:10px
-}
-
 </style>
 
 </head>
@@ -67,8 +58,7 @@ class="w-full border rounded-lg p-2 mb-3">
 
 <button id="loginBtn"
 class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4">
-Login
-</button>
+Login </button>
 
 <div id="loginError" class="text-red-500 text-sm"></div>
 
@@ -84,23 +74,19 @@ Vocabulary Trainer
 
 <button id="startPractice"
 class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4">
-Start Practice
-</button>
+Start Practice </button>
 
 <button id="manageWords"
 class="w-full bg-blue-500 text-white py-3 rounded-xl mb-4">
-Manage Word List
-</button>
+Manage Word List </button>
 
 <div class="text-center text-sm text-gray-500 mt-6">
 
-<div>
-Total Words:
+<div>Total Words:
 <span id="totalWords">0</span>
 </div>
 
-<div>
-Hard Words:
+<div>Hard Words:
 <span id="hardWords">0</span>
 </div>
 
@@ -122,16 +108,14 @@ placeholder="comma or new line separated"></textarea>
 
 <button id="importWords"
 class="w-full bg-cyan-500 text-white py-2 rounded-lg mb-4">
-Import
-</button>
+Import </button>
 
 <div id="wordList"
 class="max-h-48 overflow-y-auto text-sm mb-4"></div>
 
 <button id="backMenu"
 class="w-full bg-gray-200 py-2 rounded-lg">
-Back
-</button>
+Back </button>
 
 </div>
 
@@ -147,8 +131,7 @@ Preview Words
 
 <button id="beginDictation"
 class="w-full bg-cyan-500 text-white py-3 rounded-xl">
-Start Dictation
-</button>
+Start Dictation </button>
 
 </div>
 
@@ -161,8 +144,7 @@ class="text-3xl font-bold text-blue-600 mb-6"></div>
 
 <button id="nextWord"
 class="w-full bg-cyan-500 text-white py-3 rounded-xl">
-Next
-</button>
+Next </button>
 
 </div>
 
@@ -176,8 +158,7 @@ class="space-y-2 mb-4"></div>
 <button id="finish"
 disabled
 class="w-full bg-blue-500 text-white py-3 rounded-xl opacity-50">
-Save & Finish
-</button>
+Save & Finish </button>
 
 </div>
 
@@ -185,9 +166,9 @@ Save & Finish
 
 <div id="results" class="screen text-center">
 
-<div class="scoreBig" id="score"></div>
+<div id="score" class="scoreBig mb-2"></div>
 
-<div class="resultTitle mb-6">
+<div class="resultText mb-4">
 Well done, Vera!<br>
 See you tomorrow!
 </div>
@@ -197,8 +178,7 @@ class="w-full h-64 object-contain mb-4">
 
 <button id="backHome"
 class="w-full bg-cyan-500 text-white py-3 rounded-xl">
-Back to Menu
-</button>
+Back to Menu </button>
 
 </div>
 
@@ -225,6 +205,8 @@ appId:"1:991443793775:web:0d044609e2b3eb4e611a9a"
 }
 
 firebase.initializeApp(firebaseConfig)
+
+firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
 
 firebase.auth().onAuthStateChanged(user=>{
 if(user){
@@ -263,10 +245,8 @@ history=s.val()||[]
 }
 
 function save(){
-
 firebase.database().ref("words").set(words)
 firebase.database().ref("history").set(history)
-
 }
 
 function show(id){
@@ -274,15 +254,12 @@ function show(id){
 document.querySelectorAll(".screen")
 .forEach(s=>s.classList.remove("active"))
 
-document.getElementById(id)
-.classList.add("active")
+document.getElementById(id).classList.add("active")
 
 }
 
 function today(){
-
 return Math.floor(Date.now()/86400000)
-
 }
 
 function updateStats(){
@@ -298,10 +275,8 @@ document.getElementById("hardWords").textContent=hard
 function shuffle(a){
 
 for(let i=a.length-1;i>0;i--){
-
 let j=Math.floor(Math.random()*(i+1))
-[a[i],a[j]]=[a[j],a[i]]
-
+let t=a[i];a[i]=a[j];a[j]=t
 }
 
 return a
@@ -311,38 +286,44 @@ return a
 function getPracticeWords(){
 
 let due=words.filter(w=>!w.due||w.due<=today())
-let hard=words.filter(w=>w.mistakes>0)
 
-let pool=[...due,...hard,...shuffle(words)]
+let pool=[]
+
+due.forEach(w=>{
+pool.push(w)
+if(w.mistakes>0) pool.push(w)
+if(w.mistakes>2) pool.push(w)
+})
+
+if(pool.length<10) pool=pool.concat(words)
 
 pool=shuffle(pool)
 
-let unique=[]
+let result=[]
 let used=new Set()
 
 for(let w of pool){
 
 if(!used.has(w.text)){
-unique.push(w)
+result.push(w)
 used.add(w.text)
 }
 
-if(unique.length>=10)break
+if(result.length>=10) break
 
 }
 
-return unique
+return result
 
 }
 
 document.getElementById("startPractice").onclick=()=>{
 
-if(words.length===0)return
-
 practice=getPracticeWords()
 
-let list=document.getElementById("previewList")
+if(practice.length===0) return
 
+let list=document.getElementById("previewList")
 list.innerHTML=""
 
 practice.forEach(w=>{
@@ -356,7 +337,6 @@ show("preview")
 document.getElementById("beginDictation").onclick=()=>{
 
 current=0
-
 document.getElementById("dictWord").textContent=practice[current].text
 
 show("dictation")
@@ -384,13 +364,11 @@ function buildReview(){
 marks={}
 
 let box=document.getElementById("reviewList")
-
 box.innerHTML=""
 
 practice.forEach((w,i)=>{
 
 let row=document.createElement("div")
-
 row.className="flex justify-between items-center"
 
 row.innerHTML=`
@@ -452,14 +430,13 @@ if(!w.mistakes)w.mistakes=0
 if(marks[i]=="good"){
 
 score++
-
 w.interval=Math.round(w.interval*w.ease)
-w.ease+=0.1
+w.ease+=0.15
 
 }else{
 
 w.interval=1
-w.ease=Math.max(1.3,w.ease-0.2)
+w.ease=Math.max(1.3,w.ease-0.25)
 w.mistakes++
 
 }
@@ -479,7 +456,6 @@ updateStats()
 document.getElementById("score").textContent=`${score}/10`
 
 let imgs=["1.png","2.png","3.png","4.png","5.png"]
-
 let img=imgs[Math.floor(Math.random()*imgs.length)]
 
 document.getElementById("rewardImage").src=img
@@ -489,8 +465,8 @@ show("results")
 if(score>=8){
 
 confetti({
-particleCount:120,
-spread:90,
+particleCount:150,
+spread:100,
 origin:{y:0.6}
 })
 
@@ -506,13 +482,11 @@ show("manage")
 function renderWordList(){
 
 let list=document.getElementById("wordList")
-
 list.innerHTML=""
 
 words.forEach((w,i)=>{
 
 let row=document.createElement("div")
-
 row.className="flex justify-between mb-1"
 
 row.innerHTML=`<span>${w.text}</span><button class="text-red-500">✕</button>`
@@ -522,9 +496,7 @@ row.querySelector("button").onclick=()=>{
 words.splice(i,1)
 
 save()
-
 renderWordList()
-
 updateStats()
 
 }
@@ -542,14 +514,18 @@ let text=document.getElementById("bulkWords").value
 text.split(/[\n,]/)
 .map(w=>w.trim())
 .filter(Boolean)
-.forEach(w=>words.push({text:w,interval:1,ease:2.5,due:today(),mistakes:0}))
+.forEach(w=>words.push({
+text:w,
+interval:1,
+ease:2.5,
+due:today(),
+mistakes:0
+}))
 
 document.getElementById("bulkWords").value=""
 
 save()
-
 renderWordList()
-
 updateStats()
 
 }
