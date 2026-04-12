@@ -20,46 +20,18 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <style>
-
-body{
-background:#f0faff
-}
-
-.screen{
-display:none
-}
-
-.screen.active{
-display:flex;
-flex-direction:column;
-justify-content:center;
-min-height:65vh
-}
-
-.scoreBig{
-font-size:48px;
-font-weight:900;
-color:#06b6d4
-}
-
+body{background:#f0faff}
+.screen{display:none}
+.screen.active{display:flex;flex-direction:column;justify-content:center;min-height:65vh}
+.scoreBig{font-size:48px;font-weight:900;color:#06b6d4}
 .resultText{
-
 font-family:'Clicker Script',cursive;
-
 font-size:48px;
-
 line-height:1.2;
-
 color:#0891b2;
-
 text-align:center;
-
-text-shadow:
-2px 2px 0 #ffffff,
-4px 4px 6px rgba(0,0,0,0.15)
-
+text-shadow:2px 2px 0 #ffffff,4px 4px 6px rgba(0,0,0,0.15)
 }
-
 </style>
 
 </head>
@@ -68,159 +40,64 @@ text-shadow:
 
 <div class="w-full max-w-md bg-white rounded-[24px] shadow-xl p-6">
 
-<!-- LOGIN -->
-
 <div id="loginScreen" class="screen active text-center">
-
-<h1 class="text-2xl font-bold text-blue-600 mb-6">
-Vocab Trainer Login
-</h1>
-
-<input id="loginEmail" type="email" placeholder="Email"
-class="w-full border rounded-lg p-2 mb-3">
-
-<input id="loginPassword" type="password" placeholder="Password"
-class="w-full border rounded-lg p-2 mb-3">
-
-<button id="loginBtn"
-class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4">
-Login </button>
-
+<h1 class="text-2xl font-bold text-blue-600 mb-6">Vocab Trainer Login</h1>
+<input id="loginEmail" type="email" placeholder="Email" class="w-full border rounded-lg p-2 mb-3">
+<input id="loginPassword" type="password" placeholder="Password" class="w-full border rounded-lg p-2 mb-3">
+<button id="loginBtn" class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4">Login</button>
 <div id="loginError" class="text-red-500 text-sm"></div>
-
 </div>
-
-<!-- MENU -->
 
 <div id="menu" class="screen text-center">
-
-<h1 class="text-2xl font-bold text-blue-600 mb-6">
-Vocabulary Trainer
-</h1>
-
-<button id="startPractice"
-class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4">
-Start Practice </button>
-
-<button id="manageWords"
-class="w-full bg-blue-500 text-white py-3 rounded-xl mb-4">
-Manage Word List </button>
-
+<h1 class="text-2xl font-bold text-blue-600 mb-6">Vocabulary Trainer</h1>
+<button id="startPractice" class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4">Start Practice</button>
+<button id="manageWords" class="w-full bg-blue-500 text-white py-3 rounded-xl mb-4">Manage Word List</button>
 <div class="text-center text-sm text-gray-500 mt-6">
-
-<div>Total Words:
-<span id="totalWords">0</span>
+<div>Total Words: <span id="totalWords">0</span></div>
+<div>Hard Words: <span id="hardWords">0</span></div>
 </div>
-
-<div>Hard Words:
-<span id="hardWords">0</span>
 </div>
-
-</div>
-
-</div>
-
-<!-- MANAGE -->
 
 <div id="manage" class="screen">
-
-<h2 class="text-lg font-bold mb-3 text-center">
-Import Words
-</h2>
-
-<textarea id="bulkWords"
-class="w-full border rounded-lg p-2 h-24 mb-3"
-placeholder="comma or new line separated"></textarea>
-
-<button id="importWords"
-class="w-full bg-cyan-500 text-white py-2 rounded-lg mb-4">
-Import </button>
-
-<div id="wordList"
-class="max-h-48 overflow-y-auto text-sm mb-4"></div>
-
-<button id="backMenu"
-class="w-full bg-gray-200 py-2 rounded-lg">
-Back </button>
-
+<h2 class="text-lg font-bold mb-3 text-center">Import Words</h2>
+<textarea id="bulkWords" class="w-full border rounded-lg p-2 h-24 mb-3"></textarea>
+<button id="importWords" class="w-full bg-cyan-500 text-white py-2 rounded-lg mb-4">Import</button>
+<div id="wordList" class="max-h-48 overflow-y-auto text-sm mb-4"></div>
+<button id="backMenu" class="w-full bg-gray-200 py-2 rounded-lg">Back</button>
 </div>
-
-<!-- PREVIEW -->
 
 <div id="preview" class="screen text-center">
-
-<h2 class="text-lg font-bold mb-4">
-Preview Words
-</h2>
-
+<h2 class="text-lg font-bold mb-4">Preview Words</h2>
 <div id="previewList" class="mb-4"></div>
-
-<button id="beginDictation"
-class="w-full bg-cyan-500 text-white py-3 rounded-xl">
-Start Dictation </button>
-
+<button id="beginDictation" class="w-full bg-cyan-500 text-white py-3 rounded-xl">Start Dictation</button>
 </div>
-
-<!-- DICTATION -->
 
 <div id="dictation" class="screen text-center">
-
-<div id="dictWord"
-class="text-3xl font-bold text-blue-600 mb-6"></div>
-
-<button id="nextWord"
-class="w-full bg-cyan-500 text-white py-3 rounded-xl">
-Next </button>
-
+<div id="dictWord" class="text-3xl font-bold text-blue-600 mb-6"></div>
+<button id="nextWord" class="w-full bg-cyan-500 text-white py-3 rounded-xl">Next</button>
 </div>
-
-<!-- REVIEW -->
 
 <div id="review" class="screen">
-
-<div id="reviewList"
-class="space-y-2 mb-4"></div>
-
-<button id="finish"
-disabled
-class="w-full bg-blue-500 text-white py-3 rounded-xl opacity-50">
-Save & Finish </button>
-
+<div id="reviewList" class="space-y-2 mb-4"></div>
+<button id="finish" disabled class="w-full bg-blue-500 text-white py-3 rounded-xl opacity-50">Save & Finish</button>
 </div>
-
-<!-- RESULTS -->
 
 <div id="results" class="screen text-center">
-
 <div id="score" class="scoreBig mb-4"></div>
-
 <div class="resultText mb-6">
-
-Well done, Vera!<br>
-See you tomorrow!
-
+Well done, Vera!<br>See you tomorrow!
 </div>
-
-<img id="rewardImage"
-class="w-full h-64 object-contain mb-4">
-
-<button id="backHome"
-class="w-full bg-cyan-500 text-white py-3 rounded-xl">
-Back to Menu </button>
-
+<img id="rewardImage" class="w-full h-64 object-contain mb-4">
+<button id="backHome" class="w-full bg-cyan-500 text-white py-3 rounded-xl">Back to Menu</button>
 </div>
 
 </div>
 
 <script>
-
 document.addEventListener("DOMContentLoaded",()=>{
 
-let words=[]
-let history=[]
-let practice=[]
-let marks={}
-let current=0
+let words=[],history=[],practice=[],marks={},current=0
+let confettiInterval=null   // ← ДОБАВИЛИ
 
 const firebaseConfig={
 apiKey:"AIzaSyDJRe201hVZmoYlp7DZLLmXv_adnHRXmZs",
@@ -233,43 +110,29 @@ appId:"1:991443793775:web:0d044609e2b3eb4e611a9a"
 }
 
 firebase.initializeApp(firebaseConfig)
-
 firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
 
 firebase.auth().onAuthStateChanged(user=>{
-if(user){
-loadData()
-show("menu")
-}
+if(user){ loadData(); show("menu") }
 })
 
 document.getElementById("loginBtn").onclick=()=>{
-
-let email=document.getElementById("loginEmail").value
-let pass=document.getElementById("loginPassword").value
-
 firebase.auth()
-.signInWithEmailAndPassword(email,pass)
-.catch(e=>{
-document.getElementById("loginError").textContent=e.message
-})
-
+.signInWithEmailAndPassword(
+document.getElementById("loginEmail").value,
+document.getElementById("loginPassword").value
+)
+.catch(e=>document.getElementById("loginError").textContent=e.message)
 }
 
 function loadData(){
-
-firebase.database().ref("words").once("value")
-.then(s=>{
+firebase.database().ref("words").once("value").then(s=>{
 words=s.val()||[]
-updateStats()
-renderWordList()
+updateStats(); renderWordList()
 })
-
-firebase.database().ref("history").once("value")
-.then(s=>{
+firebase.database().ref("history").once("value").then(s=>{
 history=s.val()||[]
 })
-
 }
 
 function save(){
@@ -278,171 +141,93 @@ firebase.database().ref("history").set(history)
 }
 
 function show(id){
-
-document.querySelectorAll(".screen")
-.forEach(s=>s.classList.remove("active"))
-
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"))
 document.getElementById(id).classList.add("active")
-
 }
 
-function today(){
-return Math.floor(Date.now()/86400000)
-}
+function today(){ return Math.floor(Date.now()/86400000) }
 
 function updateStats(){
-
 document.getElementById("totalWords").textContent=words.length
-
-let hard=words.filter(w=>w.mistakes>0).length
-
-document.getElementById("hardWords").textContent=hard
-
+document.getElementById("hardWords").textContent=words.filter(w=>w.mistakes>0).length
 }
 
 function shuffle(a){
-
 for(let i=a.length-1;i>0;i--){
 let j=Math.floor(Math.random()*(i+1))
 let t=a[i];a[i]=a[j];a[j]=t
 }
-
 return a
-
 }
 
 function getPracticeWords(){
-
 let due=words.filter(w=>!w.due||w.due<=today())
-
 let pool=[]
-
 due.forEach(w=>{
 pool.push(w)
 if(w.mistakes>0) pool.push(w)
 if(w.mistakes>2) pool.push(w)
 })
-
 if(pool.length<10) pool=pool.concat(words)
-
 pool=shuffle(pool)
-
-let result=[]
-let used=new Set()
-
+let result=[],used=new Set()
 for(let w of pool){
-
-if(!used.has(w.text)){
-result.push(w)
-used.add(w.text)
-}
-
+if(!used.has(w.text)){ result.push(w); used.add(w.text) }
 if(result.length>=10) break
-
 }
-
 return result
-
 }
 
 document.getElementById("startPractice").onclick=()=>{
-
 practice=getPracticeWords()
-
 if(practice.length===0) return
-
 let list=document.getElementById("previewList")
 list.innerHTML=""
-
-practice.forEach(w=>{
-list.innerHTML+=`<div>${w.text}</div>`
-})
-
+practice.forEach(w=>list.innerHTML+=`<div>${w.text}</div>`)
 show("preview")
-
 }
 
 document.getElementById("beginDictation").onclick=()=>{
-
 current=0
 document.getElementById("dictWord").textContent=practice[current].text
-
 show("dictation")
-
 }
 
 document.getElementById("nextWord").onclick=()=>{
-
 current++
-
 if(current<practice.length){
-
 document.getElementById("dictWord").textContent=practice[current].text
-
-}else{
-
-buildReview()
-
-}
-
+}else buildReview()
 }
 
 function buildReview(){
-
 marks={}
-
 let box=document.getElementById("reviewList")
 box.innerHTML=""
-
 practice.forEach((w,i)=>{
-
 let row=document.createElement("div")
 row.className="flex justify-between items-center"
-
 row.innerHTML=`
 <span>${w.text}</span>
 <div class="flex border rounded-lg overflow-hidden">
 <button class="good px-3 py-1 text-green-600">✓</button>
 <button class="bad px-3 py-1 text-red-600">✕</button>
-</div>
-`
-
+</div>`
 let good=row.querySelector(".good")
 let bad=row.querySelector(".bad")
-
-good.onclick=()=>{
-marks[i]="good"
-good.classList.add("bg-green-500","text-white")
-bad.classList.remove("bg-red-500","text-white")
-checkFinish()
-}
-
-bad.onclick=()=>{
-marks[i]="bad"
-bad.classList.add("bg-red-500","text-white")
-good.classList.remove("bg-green-500","text-white")
-checkFinish()
-}
-
+good.onclick=()=>{marks[i]="good";checkFinish()}
+bad.onclick=()=>{marks[i]="bad";checkFinish()}
 box.appendChild(row)
-
 })
-
 show("review")
-
 }
 
 function checkFinish(){
-
 if(Object.keys(marks).length===practice.length){
-
 let btn=document.getElementById("finish")
-
 btn.disabled=false
 btn.classList.remove("opacity-50")
-
 }
-
 }
 
 document.getElementById("finish").onclick=()=>{
@@ -450,119 +235,90 @@ document.getElementById("finish").onclick=()=>{
 let score=0
 
 practice.forEach((w,i)=>{
-
 if(!w.interval)w.interval=1
 if(!w.ease)w.ease=2.5
 if(!w.mistakes)w.mistakes=0
 
 if(marks[i]=="good"){
-
 score++
 w.interval=Math.round(w.interval*w.ease)
 w.ease+=0.15
-
 }else{
-
 w.interval=1
 w.ease=Math.max(1.3,w.ease-0.25)
 w.mistakes++
-
 }
 
 w.due=today()+w.interval
-
 })
 
 history.push({date:today(),score:score})
-
 if(history.length>30)history.shift()
 
 save()
-
 updateStats()
 
 document.getElementById("score").textContent=`${score}/10`
 
 let imgs=["1.png","2.png","3.png","4.png","5.png"]
-let img=imgs[Math.floor(Math.random()*imgs.length)]
-
-document.getElementById("rewardImage").src=img
+document.getElementById("rewardImage").src=imgs[Math.floor(Math.random()*imgs.length)]
 
 show("results")
 
-if(score>=8){
+// ❗ НОВАЯ ЛОГИКА СПРИНКЛЗ
 
+if(confettiInterval) clearInterval(confettiInterval)
+
+if(score>=8){
+confettiInterval=setInterval(()=>{
 confetti({
-particleCount:150,
+particleCount:120,
 spread:100,
 origin:{y:0.6}
 })
-
+},1200)
 }
 
 }
 
-document.getElementById("manageWords").onclick=()=>{
-renderWordList()
-show("manage")
+// ❗ ОСТАНОВКА ПРИ ВЫХОДЕ
+
+document.getElementById("backHome").onclick=()=>{
+if(confettiInterval){
+clearInterval(confettiInterval)
+confettiInterval=null
 }
+show("menu")
+}
+
+document.getElementById("manageWords").onclick=()=>{renderWordList();show("manage")}
 
 function renderWordList(){
-
 let list=document.getElementById("wordList")
 list.innerHTML=""
-
 words.forEach((w,i)=>{
-
 let row=document.createElement("div")
 row.className="flex justify-between mb-1"
-
 row.innerHTML=`<span>${w.text}</span><button class="text-red-500">✕</button>`
-
 row.querySelector("button").onclick=()=>{
-
 words.splice(i,1)
-
-save()
-renderWordList()
-updateStats()
-
+save();renderWordList();updateStats()
 }
-
 list.appendChild(row)
-
 })
-
 }
 
 document.getElementById("importWords").onclick=()=>{
-
 let text=document.getElementById("bulkWords").value
-
-text.split(/[\n,]/)
-.map(w=>w.trim())
-.filter(Boolean)
-.forEach(w=>words.push({
-text:w,
-interval:1,
-ease:2.5,
-due:today(),
-mistakes:0
-}))
-
+text.split(/[\n,]/).map(w=>w.trim()).filter(Boolean)
+.forEach(w=>words.push({text:w,interval:1,ease:2.5,due:today(),mistakes:0}))
 document.getElementById("bulkWords").value=""
-
-save()
-renderWordList()
-updateStats()
-
+save();renderWordList();updateStats()
 }
 
 document.getElementById("backMenu").onclick=()=>show("menu")
-document.getElementById("backHome").onclick=()=>show("menu")
 
 })
-
 </script>
 
 </body>
