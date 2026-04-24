@@ -44,37 +44,34 @@
 
         <div id="manage" class="screen">
             <h2 class="text-xl font-bold mb-4">Update Word List</h2>
-            <p class="text-xs text-gray-500 mb-2 italic">Format: Word | Sentence (one per line)</p>
-            <textarea id="bulkWords" class="w-full border-2 rounded-xl p-3 h-32 mb-4 focus:border-blue-300 outline-none" placeholder="example: Abundant | The island has an abundant supply of water."></textarea>
-            <button id="importWords" class="w-full bg-blue-500 text-white py-3 rounded-xl mb-6 font-bold hover:bg-blue-600 transition">Import / Update</button>
-            <div id="wordList" class="max-h-40 overflow-y-auto space-y-1 mb-6 border-t pt-4"></div>
-            <button id="backMenu" class="w-full bg-gray-100 py-3 rounded-xl font-medium">Back to Menu</button>
+            <textarea id="bulkWords" class="w-full border-2 rounded-xl p-3 h-32 mb-4" placeholder="Word | Sentence"></textarea>
+            <button id="importWords" class="w-full bg-blue-500 text-white py-3 rounded-xl mb-6 font-bold">Import / Update</button>
+            <div id="wordList" class="max-h-40 overflow-y-auto mb-6 border-t pt-4"></div>
+            <button id="backMenu" class="w-full bg-gray-100 py-3 rounded-xl font-medium">Back</button>
         </div>
 
         <div id="preview" class="screen">
             <h2 class="text-xl font-bold mb-4 text-center">Preview Words</h2>
-            <p class="text-sm text-gray-500 mb-4 text-center">Tap a word to see its meaning & synonyms.</p>
             <div id="previewList" class="space-y-3 mb-8"></div>
             <button id="beginDictation" class="w-full bg-cyan-500 text-white py-4 rounded-2xl font-bold shadow-lg">I'm Ready!</button>
         </div>
 
         <div id="dictation" class="screen text-center">
-            <div class="text-xs font-bold text-cyan-500 tracking-widest uppercase mb-4">Read aloud to Vera</div>
-            <div id="dictSentence" class="text-lg text-slate-700 mb-6 italic leading-relaxed px-4"></div>
+            <div id="dictSentence" class="text-lg text-slate-700 mb-6 italic leading-relaxed px-4 pt-4 border-t"></div>
             <div id="dictWord" class="text-4xl font-black text-blue-600 mb-10 tracking-tight"></div>
             <button id="nextWord" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold">Next Word →</button>
         </div>
 
         <div id="review" class="screen">
-            <h2 class="text-xl font-bold mb-4 text-center">Check the Paper</h2>
+            <h2 class="text-xl font-bold mb-4 text-center">Check Paper</h2>
             <div id="reviewList" class="space-y-3 mb-6"></div>
-            <button id="finish" disabled class="w-full bg-cyan-600 text-white py-4 rounded-2xl font-bold opacity-50 transition">Finish & Save Progress</button>
+            <button id="finish" disabled class="w-full bg-cyan-600 text-white py-4 rounded-2xl font-bold opacity-50">Finish</button>
         </div>
 
         <div id="results" class="screen text-center">
             <div id="scoreDisplay" class="text-6xl font-black text-cyan-500 mb-2">0/10</div>
             <div id="starAwarded" class="text-amber-500 font-bold mb-6 text-xl"></div>
-            <div class="resultText mb-8">Amazing job, Vera!<br>You're getting stronger!</div>
+            <div class="resultText mb-8">Amazing job, Vera!</div>
             <img id="rewardImage" class="w-full h-48 object-contain mb-8 rounded-2xl">
             <button id="backHome" class="w-full bg-cyan-500 text-white py-4 rounded-2xl font-bold">Back to Menu</button>
         </div>
@@ -83,77 +80,4 @@
             <div class="text-center text-white max-w-sm w-full reward-card">
                 <div class="text-7xl mb-6">🎁</div>
                 <h2 class="text-3xl font-black mb-2">SUPER REWARD!</h2>
-                <p class="text-lg mb-8 opacity-90">You've completed 5 brilliant dictations!</p>
-                <div id="prizeName" class="text-2xl font-bold bg-white text-cyan-600 p-8 rounded-3xl shadow-2xl mb-10 border-4 border-amber-300"></div>
-                <button id="closeReward" class="bg-amber-400 hover:bg-amber-300 text-amber-900 font-black px-12 py-4 rounded-full text-xl shadow-xl transition-transform active:scale-95">YEAY!</button>
-            </div>
-        </div>
-
-    </div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded",()=>{
-            let words=[], history=[], practice=[], marks={}, current=0, stars=0;
-            let confettiInterval=null;
-
-            const rewardsPool = [
-                "Suttles Treasure Hunt (£3 item)",
-                "Barnaby & Boo: One Single Scoop",
-                "£3 Pocket Money Boost",
-                "15 min Digital Bonus",
-                "VIP Toothbrushing by Mum",
-                "Extra Chapter: Bedtime Reading",
-                "High-Flyer: 15 min on the Swing in the Street",
-                "Freedom Pass: Skip 1 Cage Cleaning",
-                "Park Dash: 15 min of Play",
-                "Board Game Night",
-                "Chief of the Kitchen: Choose Dinner"
-            ];
-
-            const firebaseConfig={
-                apiKey: "AIzaSyDJRe201hVZmoYlp7DZLLmXv_adnHRXmZs",
-                authDomain: "vocabtrainer-969fd.firebaseapp.com",
-                databaseURL: "https://vocabtrainer-969fd-default-rtdb.europe-west1.firebasedatabase.app",
-                projectId: "vocabtrainer-969fd",
-                storageBucket: "vocabtrainer-969fd.appspot.com",
-                messagingSenderId: "991443793775",
-                appId: "1:991443793775:web:0d044609e2b3eb4e611a9a"
-            };
-
-            firebase.initializeApp(firebaseConfig);
-            firebase.auth().onAuthStateChanged(user=>{ if(user){ loadData(); show("menu") } });
-
-            document.getElementById("loginBtn").onclick=()=>{
-                firebase.auth().signInWithEmailAndPassword(document.getElementById("loginEmail").value, document.getElementById("loginPassword").value)
-                .catch(e=>document.getElementById("loginError").textContent=e.message);
-            }
-
-            function loadData(){
-                firebase.database().ref("words").once("value").then(s=>{ words=s.val()||[]; updateStats(); renderWordList(); });
-                firebase.database().ref("stars").once("value").then(s=>{ stars=s.val()||0; updateStats(); });
-            }
-
-            function save(){ 
-                firebase.database().ref("words").set(words); 
-                firebase.database().ref("stars").set(stars);
-            }
-
-            function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); document.getElementById(id).classList.add("active"); }
-            
-            function updateStats(){
-                document.getElementById("totalWords").textContent=words.length;
-                document.getElementById("hardWords").textContent=words.filter(w=>w.mistakes>0).length;
-                document.getElementById("starProgress").textContent = `Stars toward reward: ${stars}/5`;
-            }
-
-            async function fetchInfo(word, elementId) {
-                const box = document.getElementById(elementId);
-                box.style.display = "block";
-                box.innerHTML = "Finding info...";
-                try {
-                    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-                    const data = await res.json();
-                    if(data[0]) {
-                        const def = data[0].meanings[0].definitions[0].definition;
-                        const syns = data[0].meanings[0].synonyms.slice(0,3).join(", ") || "No common synonyms found";
-                        box.innerHTML = `<div class='text-cyan-700 font-bold'>Meaning:</div>${def}<div class='mt-2
+                <div id="prizeName" class="text-2xl font-bold bg-white text-cyan-600 p-8 rounded-3xl shadow-2xl mb-10 mt-4 border-4 border-amber
