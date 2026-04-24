@@ -1,202 +1,463 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Vocab Trainer 11+</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Clicker+Script&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <style>
-        body { background: #f0faff; font-family: 'Inter', sans-serif; }
-        .screen { display: none; }
-        .screen.active { display: flex; flex-direction: column; min-height: 80vh; }
-        .lookup-box { font-size: 0.85rem; background: #eef2ff; padding: 10px; border-radius: 8px; margin-top: 5px; display: none; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vocab Trainer</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Clicker+Script&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<style>
+body{background:#f0faff}
+.screen{display:none}
+.screen.active{display:flex;flex-direction:column;justify-content:center;min-height:65vh}
+.scoreBig{font-size:48px;font-weight:900;color:#06b6d4}
+.resultText{
+font-family:'Clicker Script',cursive;
+font-size:48px;
+line-height:1.2;
+color:#0891b2;
+text-align:center;
+text-shadow:2px 2px 0 #ffffff,4px 4px 6px rgba(0,0,0,0.15)
+}
+.starRow{font-size:30px;letter-spacing:6px}
+.rewardTitle{
+font-family:'Clicker Script',cursive;
+font-size:46px;
+color:#0891b2;
+line-height:1.1;
+text-shadow:2px 2px 0 #fff,4px 4px 6px rgba(0,0,0,.12)
+}
+</style>
 </head>
-<body class="p-4">
-    <div class="max-w-md mx-auto bg-white rounded-3xl shadow-xl p-6 mt-4">
-        
-        <div id="loginScreen" class="screen active text-center">
-            <h1 class="text-2xl font-bold mb-6">Login to Vocab Gym</h1>
-            <input id="loginEmail" type="email" placeholder="Email" class="w-full border p-3 rounded-xl mb-3">
-            <input id="loginPassword" type="password" placeholder="Password" class="w-full border p-3 rounded-xl mb-6">
-            <button id="loginBtn" class="w-full bg-blue-500 text-white py-4 rounded-xl font-bold">Login</button>
-            <div id="loginError" class="text-red-500 mt-4 text-sm"></div>
-        </div>
 
-        <div id="menu" class="screen text-center">
-            <div id="starProgress" class="bg-amber-100 text-amber-700 py-2 rounded-full mb-6 font-bold">Stars: 0/5</div>
-            <button id="startPractice" class="w-full bg-cyan-500 text-white py-5 rounded-2xl mb-4 font-bold text-lg">Start Dictation</button>
-            <button id="manageWords" class="w-full bg-gray-100 py-3 rounded-xl mb-6">Settings / Words</button>
-            <div class="flex justify-around text-sm text-gray-500">
-                <div>Total: <span id="totalWords">0</span></div>
-                <div>Hard: <span id="hardWords">0</span></div>
-            </div>
-        </div>
+<body class="min-h-screen flex items-center justify-center p-4">
 
-        <div id="manage" class="screen">
-            <button id="backMenu" class="text-blue-500 mb-4">← Back</button>
-            <textarea id="bulkWords" class="w-full border p-3 h-32 rounded-xl mb-2" placeholder="Word | Sentence"></textarea>
-            <button id="importWords" class="w-full bg-green-500 text-white py-3 rounded-xl font-bold">Add / Update</button>
-            <div id="wordList" class="mt-6 border-t pt-4 overflow-y-auto max-h-64"></div>
-        </div>
+<div class="w-full max-w-md bg-white rounded-[24px] shadow-xl p-6">
 
-        <div id="preview" class="screen">
-            <h2 class="font-bold mb-4">Check these words:</h2>
-            <div id="previewList" class="space-y-2 mb-6"></div>
-            <button id="beginDictation" class="w-full bg-blue-500 text-white py-4 rounded-xl font-bold">Start Reading</button>
-        </div>
+<!-- LOGIN -->
+<div id="loginScreen" class="screen active text-center">
+<h1 class="text-2xl font-bold text-blue-600 mb-6">Vocab Trainer Login</h1>
+<input id="loginEmail" type="email" placeholder="Email" class="w-full border rounded-lg p-2 mb-3">
+<input id="loginPassword" type="password" placeholder="Password" class="w-full border rounded-lg p-2 mb-3">
+<button id="loginBtn" class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4">Login</button>
+<div id="loginError" class="text-red-500 text-sm"></div>
+</div>
 
-        <div id="dictation" class="screen text-center">
-            <div id="dictSentence" class="text-gray-600 italic mb-4 px-2 pt-10"></div>
-            <div id="dictWord" class="text-4xl font-bold text-blue-600 mb-10"></div>
-            <button id="nextWord" class="w-full bg-black text-white py-4 rounded-xl">Next Word →</button>
-        </div>
+<!-- MENU -->
+<div id="menu" class="screen text-center">
+<h1 class="text-2xl font-bold text-blue-600 mb-6">Vocabulary Trainer</h1>
 
-        <div id="review" class="screen">
-            <h2 class="font-bold mb-4 text-center">Mark results</h2>
-            <div id="reviewList" class="space-y-3 mb-6"></div>
-            <button id="finish" disabled class="w-full bg-blue-600 text-white py-4 rounded-xl opacity-50">Done</button>
-        </div>
+<button id="startPractice" class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4">
+Start Practice
+</button>
 
-        <div id="results" class="screen text-center">
-            <div id="scoreDisplay" class="text-5xl font-bold text-cyan-500 mb-4">0/10</div>
-            <div id="starAwarded" class="text-amber-500 font-bold mb-6"></div>
-            <button id="backHome" class="w-full bg-gray-800 text-white py-4 rounded-xl">Back to Home</button>
-        </div>
+<button id="manageWords" class="w-full bg-blue-500 text-white py-3 rounded-xl mb-4">
+Manage Word List
+</button>
 
-        <div id="superReward" class="fixed inset-0 bg-blue-600 bg-opacity-95 hidden items-center justify-center p-6 z-50">
-            <div class="text-center text-white">
-                <div class="text-6xl mb-4">🎁</div>
-                <h2 class="text-2xl font-bold mb-6 text-white">YOUR REWARD:</h2>
-                <div id="prizeName" class="text-xl font-bold bg-white text-blue-600 p-6 rounded-2xl mb-8"></div>
-                <button id="closeReward" class="bg-white text-blue-600 px-8 py-3 rounded-full font-bold">YEAY!</button>
-            </div>
-        </div>
-    </div>
+<div class="text-center text-sm text-gray-500 mt-6">
+<div>Total Words: <span id="totalWords">0</span></div>
+<div>Hard Words: <span id="hardWords">0</span></div>
+<div class="mt-2 font-semibold text-yellow-600">Stars toward reward: <span id="starsMenu">0</span>/5</div>
+</div>
+</div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded",()=>{
-            let words=[], practice=[], marks={}, current=0, stars=0;
-            const rewards = [
-                "Suttles Treasure Hunt (£3 item)", "Barnaby & Boo: One Single Scoop",
-                "£3 Pocket Money Boost", "15 min Digital Bonus",
-                "VIP Toothbrushing by Mum", "Extra Chapter: Bedtime Reading",
-                "High-Flyer: 15 min on the Swing in the Street", "Freedom Pass: Skip 1 Cage Cleaning",
-                "Park Dash: 15 min of Play", "Board Game Night", "Chief of the Kitchen: Choose Dinner"
-            ];
+<!-- MANAGE -->
+<div id="manage" class="screen">
+<h2 class="text-lg font-bold mb-3 text-center">Import Words</h2>
+<textarea id="bulkWords" class="w-full border rounded-lg p-2 h-24 mb-3"
+placeholder="word | sentence"></textarea>
+<button id="importWords" class="w-full bg-cyan-500 text-white py-2 rounded-lg mb-4">Import</button>
+<div id="wordList" class="max-h-48 overflow-y-auto text-sm mb-4"></div>
+<button id="backMenu" class="w-full bg-gray-200 py-2 rounded-lg">Back</button>
+</div>
 
-            const firebaseConfig={
-                apiKey: "AIzaSyDJRe201hVZmoYlp7DZLLmXv_adnHRXmZs",
-                authDomain: "vocabtrainer-969fd.firebaseapp.com",
-                databaseURL: "https://vocabtrainer-969fd-default-rtdb.europe-west1.firebasedatabase.app",
-                projectId: "vocabtrainer-969fd",
-                storageBucket: "vocabtrainer-969fd.appspot.com",
-                messagingSenderId: "991443793775",
-                appId: "1:991443793775:web:0d044609e2b3eb4e611a9a"
-            };
+<!-- PREVIEW -->
+<div id="preview" class="screen text-center">
+<h2 class="text-lg font-bold mb-4">Preview Words</h2>
+<div id="previewList" class="mb-4"></div>
+<button id="beginDictation" class="w-full bg-cyan-500 text-white py-3 rounded-xl">Start Dictation</button>
+</div>
 
-            firebase.initializeApp(firebaseConfig);
+<!-- DICTATION -->
+<div id="dictation" class="screen text-center">
+<div id="dictWord" class="text-2xl font-bold text-blue-600 mb-6 leading-relaxed"></div>
+<button id="nextWord" class="w-full bg-cyan-500 text-white py-3 rounded-xl">Next</button>
+</div>
 
-            firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(()=>{
-                document.getElementById("loginBtn").onclick=()=>{
-                    firebase.auth().signInWithEmailAndPassword(document.getElementById("loginEmail").value, document.getElementById("loginPassword").value)
-                    .catch(e=>document.getElementById("loginError").textContent="Error: " + e.message);
-                };
-            });
+<!-- REVIEW -->
+<div id="review" class="screen">
+<div id="reviewList" class="space-y-2 mb-4"></div>
+<button id="finish" disabled class="w-full bg-blue-500 text-white py-3 rounded-xl opacity-50">Save & Finish</button>
+</div>
 
-            firebase.auth().onAuthStateChanged(user=>{ if(user){ loadData(); show("menu"); } });
+<!-- RESULTS -->
+<div id="results" class="screen text-center">
+<div id="score" class="scoreBig mb-4"></div>
 
-            function loadData(){
-                firebase.database().ref("words").on("value", s=>{ words=s.val()||[]; updateStats(); renderWordList(); });
-                firebase.database().ref("stars").on("value", s=>{ stars=s.val()||0; updateStats(); });
-            }
+<div class="resultText mb-2">
+Well done, Vera!<br>See you tomorrow!
+</div>
 
-            function save(){ firebase.database().ref("words").set(words); firebase.database().ref("stars").set(stars); }
-            function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); document.getElementById(id).classList.add("active"); }
-            function updateStats(){
-                document.getElementById("totalWords").textContent=words.length;
-                document.getElementById("hardWords").textContent=words.filter(w=>w.mistakes>0).length;
-                document.getElementById("starProgress").textContent = `Stars: ${stars}/5`;
-            }
+<div id="starBar" class="starRow mb-4"></div>
 
-            document.getElementById("startPractice").onclick=()=>{
-                practice = [...words].sort(()=>Math.random()-0.5).slice(0,10);
-                if(practice.length===0) return alert("No words!");
-                let list=document.getElementById("previewList"); list.innerHTML="";
-                practice.forEach((w,i)=>{
-                    let d=document.createElement("div"); d.className="p-3 border rounded-xl bg-gray-50 font-bold";
-                    d.textContent=w.text; list.appendChild(d);
-                });
-                show("preview");
-            };
+<img id="rewardImage" class="w-full h-64 object-contain mb-4">
 
-            document.getElementById("beginDictation").onclick=()=>{ current=0; updateDict(); show("dictation"); };
-            function updateDict(){
-                document.getElementById("dictWord").textContent = practice[current].text;
-                document.getElementById("dictSentence").textContent = practice[current].sentence || "";
-            }
+<button id="backHome" class="w-full bg-cyan-500 text-white py-3 rounded-xl">
+Back to Menu
+</button>
+</div>
 
-            document.getElementById("nextWord").onclick=()=>{
-                current++; if(current<practice.length) updateDict(); else buildReview();
-            };
+<!-- REWARD -->
+<div id="rewardScreen" class="screen text-center">
+<div class="rewardTitle mb-4">
+Amazing Work, Vera!
+</div>
 
-            function buildReview(){
-                marks={}; let box=document.getElementById("reviewList"); box.innerHTML="";
-                practice.forEach((w,i)=>{
-                    let r=document.createElement("div"); r.className="flex justify-between items-center p-2 border-b";
-                    r.innerHTML=`<span>${w.text}</span><div class="flex gap-2"><button id="g${i}" class="p-2 border rounded">✓</button><button id="b${i}" class="p-2 border rounded">✕</button></div>`;
-                    r.querySelector(`#g${i}`).onclick=(e)=>{ marks[i]="good"; e.target.className="p-2 bg-green-500 text-white rounded"; check(); };
-                    r.querySelector(`#b${i}`).onclick=(e)=>{ marks[i]="bad"; e.target.className="p-2 bg-red-500 text-white rounded"; check(); };
-                    box.appendChild(r);
-                });
-                show("review");
-            }
-            function check(){ if(Object.keys(marks).length===practice.length){ let b=document.getElementById("finish"); b.disabled=false; b.classList.remove("opacity-50"); } }
+<div class="text-2xl mb-3">🏆</div>
 
-            document.getElementById("finish").onclick=()=>{
-                let sc=0; practice.forEach((w,i)=>{ if(marks[i]=="good") sc++; else w.mistakes=(w.mistakes||0)+1; });
-                document.getElementById("scoreDisplay").textContent=`${sc}/10`;
-                if(sc>=8){ stars++; confetti(); document.getElementById("starAwarded").textContent="⭐ Star added!"; }
-                save(); updateStats(); show("results");
-                if(stars>=5){
-                    setTimeout(()=>{
-                        document.getElementById("prizeName").textContent=rewards[Math.floor(Math.random()*rewards.length)];
-                        document.getElementById("superReward").style.display="flex";
-                        stars=0; save();
-                    },800);
-                }
-            };
+<div class="text-lg font-bold text-cyan-700 mb-4">
+You've earned:
+</div>
 
-            document.getElementById("importWords").onclick=()=>{
-                let lines=document.getElementById("bulkWords").value.split('\n');
-                lines.forEach(l=>{
-                    if(!l.trim()) return;
-                    let [txt, sent]=l.split('|').map(s=>s.trim());
-                    let ex=words.find(w=>w.text.toLowerCase()===txt.toLowerCase());
-                    if(ex) ex.sentence=sent||ex.sentence; else words.push({text:txt, sentence:sent||"", mistakes:0});
-                });
-                document.getElementById("bulkWords").value=""; save(); alert("Updated!");
-            };
+<div id="rewardText" class="text-base text-gray-700 mb-6 leading-relaxed"></div>
 
-            document.getElementById("closeReward").onclick=()=>document.getElementById("superReward").style.display="none";
-            document.getElementById("backHome").onclick=()=>show("menu");
-            document.getElementById("manageWords").onclick=()=>show("manage");
-            document.getElementById("backMenu").onclick=()=>show("menu");
-            function renderWordList(){
-                let list=document.getElementById("wordList"); list.innerHTML="";
-                words.forEach((w,i)=>{
-                    let r=document.createElement("div"); r.className="text-xs flex justify-between mb-1";
-                    r.innerHTML=`<span>${w.text}</span><button class="text-red-400">✕</button>`;
-                    r.querySelector("button").onclick=()=>{ words.splice(i,1); save(); };
-                    list.appendChild(r);
-                });
-            }
-        });
-    </script>
+<button id="rewardBack" class="w-full bg-cyan-500 text-white py-3 rounded-xl">
+Back to Menu
+</button>
+</div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded",()=>{
+
+let words=[],history=[],practice=[],marks={},current=0
+let stars=0
+let confettiInterval=null
+
+const rewards=[
+"Suttles Treasure Hunt – choose 1 stationery item up to £3",
+"Barnaby & Boo Treat – 1 scoop ice cream up to £3",
+"£3 Pocket Money Boost",
+"15 min Digital Bonus",
+"VIP Toothbrushing – Mum brushes for you",
+"Extra Chapter – bedtime reading 15 min",
+"High-Flyer – 15 min swings outside",
+"Freedom Pass – skip 1 pet cage clean",
+"Park Dash – extra 15 min park play",
+"Board Game Night – you choose the game",
+"Choose the Dinner Menu"
+]
+
+const firebaseConfig={
+apiKey:"AIzaSyDJRe201hVZmoYlp7DZLLmXv_adnHRXmZs",
+authDomain:"vocabtrainer-969fd.firebaseapp.com",
+databaseURL:"https://vocabtrainer-969fd-default-rtdb.europe-west1.firebasedatabase.app",
+projectId:"vocabtrainer-969fd",
+storageBucket:"vocabtrainer-969fd.appspot.com",
+messagingSenderId:"991443793775",
+appId:"1:991443793775:web:0d044609e2b3eb4e611a9a"
+}
+
+firebase.initializeApp(firebaseConfig)
+firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+
+firebase.auth().onAuthStateChanged(user=>{
+if(user){loadData();show("menu")}
+})
+
+document.getElementById("loginBtn").onclick=()=>{
+firebase.auth().signInWithEmailAndPassword(
+loginEmail.value,loginPassword.value
+).catch(e=>loginError.textContent=e.message)
+}
+
+function loadData(){
+firebase.database().ref("words").once("value").then(s=>{
+words=s.val()||[]
+updateStats()
+renderWordList()
+})
+firebase.database().ref("history").once("value").then(s=>{
+history=s.val()||[]
+})
+firebase.database().ref("stars").once("value").then(s=>{
+stars=s.val()||0
+renderStars()
+})
+}
+
+function save(){
+firebase.database().ref("words").set(words)
+firebase.database().ref("history").set(history)
+firebase.database().ref("stars").set(stars)
+}
+
+function show(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"))
+document.getElementById(id).classList.add("active")
+}
+
+function today(){return Math.floor(Date.now()/86400000)}
+
+function updateStats(){
+totalWords.textContent=words.length
+hardWords.textContent=words.filter(w=>w.mistakes>0).length
+starsMenu.textContent=stars
+}
+
+function renderStars(){
+starsMenu.textContent=stars
+let html=""
+for(let i=1;i<=5;i++){
+html+=i<=stars?"⭐":"☆"
+}
+starBar.textContent=html
+}
+
+function shuffle(a){
+for(let i=a.length-1;i>0;i--){
+let j=Math.floor(Math.random()*(i+1))
+let t=a[i];a[i]=a[j];a[j]=t
+}
+return a
+}
+
+function getPracticeWords(){
+let due=words.filter(w=>!w.due||w.due<=today())
+let pool=[]
+due.forEach(w=>{
+pool.push(w)
+if(w.mistakes>0)pool.push(w)
+if(w.mistakes>2)pool.push(w)
+})
+if(pool.length<10)pool=pool.concat(words)
+pool=shuffle(pool)
+
+let result=[],used=new Set()
+for(let w of pool){
+if(!used.has(w.text)){
+result.push(w)
+used.add(w.text)
+}
+if(result.length>=10)break
+}
+return result
+}
+
+startPractice.onclick=()=>{
+practice=getPracticeWords()
+if(practice.length===0)return
+previewList.innerHTML=""
+practice.forEach(w=>previewList.innerHTML+=`<div>${w.text}</div>`)
+show("preview")
+}
+
+beginDictation.onclick=()=>{
+current=0
+dictWord.textContent=practice[current].sentence||practice[current].text
+show("dictation")
+}
+
+nextWord.onclick=()=>{
+current++
+if(current<practice.length){
+dictWord.textContent=practice[current].sentence||practice[current].text
+}else buildReview()
+}
+
+function buildReview(){
+marks={}
+reviewList.innerHTML=""
+
+practice.forEach((w,i)=>{
+let row=document.createElement("div")
+row.className="flex justify-between items-center"
+
+row.innerHTML=`
+<span>${w.text}</span>
+<div class="flex border rounded-lg overflow-hidden">
+<button class="good px-3 py-1 text-green-600">✓</button>
+<button class="bad px-3 py-1 text-red-600">✕</button>
+</div>`
+
+let good=row.querySelector(".good")
+let bad=row.querySelector(".bad")
+
+good.onclick=()=>{
+marks[i]="good"
+good.classList.add("bg-green-500","text-white")
+bad.classList.remove("bg-red-500","text-white")
+checkFinish()
+}
+
+bad.onclick=()=>{
+marks[i]="bad"
+bad.classList.add("bg-red-500","text-white")
+good.classList.remove("bg-green-500","text-white")
+checkFinish()
+}
+
+reviewList.appendChild(row)
+})
+
+show("review")
+}
+
+function checkFinish(){
+if(Object.keys(marks).length===practice.length){
+finish.disabled=false
+finish.classList.remove("opacity-50")
+}
+}
+
+finish.onclick=()=>{
+
+let score=0
+
+practice.forEach((w,i)=>{
+if(!w.interval)w.interval=1
+if(!w.ease)w.ease=2.5
+if(!w.mistakes)w.mistakes=0
+
+if(marks[i]=="good"){
+score++
+w.interval=Math.round(w.interval*w.ease)
+w.ease+=0.15
+}else{
+w.interval=1
+w.ease=Math.max(1.3,w.ease-0.25)
+w.mistakes++
+}
+
+w.due=today()+w.interval
+})
+
+history.push({date:today(),score:score})
+if(history.length>30)history.shift()
+
+if(score>=8)stars++
+
+save()
+updateStats()
+renderStars()
+
+score.innerText=`${score}/10`
+
+let imgs=["1.png","2.png","3.png","4.png","5.png"]
+rewardImage.src=imgs[Math.floor(Math.random()*imgs.length)]
+
+show("results")
+
+if(confettiInterval)clearInterval(confettiInterval)
+
+if(score>=8){
+confettiInterval=setInterval(()=>{
+confetti({particleCount:120,spread:100,origin:{y:0.6}})
+},1200)
+}
+
+if(stars>=5){
+setTimeout(()=>{
+stars=0
+save()
+renderStars()
+rewardText.textContent=rewards[Math.floor(Math.random()*rewards.length)]
+show("rewardScreen")
+},1500)
+}
+
+}
+
+backHome.onclick=()=>{
+if(confettiInterval){
+clearInterval(confettiInterval)
+confettiInterval=null
+}
+show("menu")
+}
+
+rewardBack.onclick=()=>{
+if(confettiInterval){
+clearInterval(confettiInterval)
+confettiInterval=null
+}
+show("menu")
+}
+
+manageWords.onclick=()=>{
+renderWordList()
+show("manage")
+}
+
+function renderWordList(){
+wordList.innerHTML=""
+
+words.forEach((w,i)=>{
+let row=document.createElement("div")
+row.className="flex justify-between mb-1"
+
+row.innerHTML=`<span>${w.text}</span><button class="text-red-500">✕</button>`
+
+row.querySelector("button").onclick=()=>{
+words.splice(i,1)
+save()
+renderWordList()
+updateStats()
+}
+
+wordList.appendChild(row)
+})
+}
+
+importWords.onclick=()=>{
+let text=bulkWords.value.trim()
+if(!text)return
+
+text.split("\n").forEach(line=>{
+line=line.trim()
+if(!line)return
+
+let parts=line.split("|")
+let word=parts[0].trim()
+let sentence=(parts[1]||"").trim()
+
+let existing=words.find(x=>x.text.toLowerCase()==word.toLowerCase())
+
+if(existing){
+existing.sentence=sentence
+}else{
+words.push({
+text:word,
+sentence:sentence,
+interval:1,
+ease:2.5,
+due:today(),
+mistakes:0
+})
+}
+})
+
+bulkWords.value=""
+save()
+renderWordList()
+updateStats()
+}
+
+backMenu.onclick=()=>show("menu")
+
+})
+</script>
+
 </body>
 </html>
+```
