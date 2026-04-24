@@ -16,8 +16,6 @@
         .screen.active { display: flex; flex-direction: column; justify-content: center; min-height: 65vh; }
         .resultText { font-family: 'Clicker Script', cursive; font-size: 42px; color: #0891b2; text-align: center; }
         .lookup-box { font-size: 0.85rem; background: #f0f9ff; padding: 10px; border-radius: 12px; margin-top: 8px; display: none; border: 1px dashed #bae6fd; }
-        .reward-card { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
@@ -25,20 +23,20 @@
 
         <div id="loginScreen" class="screen active text-center">
             <h1 class="text-3xl font-black text-blue-600 mb-8">Vocab Gym 11+</h1>
-            <input id="loginEmail" type="email" placeholder="Email" class="w-full border-2 rounded-xl p-3 mb-3 focus:border-cyan-400 outline-none">
-            <input id="loginPassword" type="password" placeholder="Password" class="w-full border-2 rounded-xl p-3 mb-6 focus:border-cyan-400 outline-none">
-            <button id="loginBtn" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-4 rounded-2xl transition shadow-lg">Login</button>
+            <input id="loginEmail" type="email" placeholder="Email" class="w-full border-2 rounded-xl p-3 mb-3 outline-none">
+            <input id="loginPassword" type="password" placeholder="Password" class="w-full border-2 rounded-xl p-3 mb-6 outline-none">
+            <button id="loginBtn" class="w-full bg-cyan-500 text-white font-bold py-4 rounded-2xl shadow-lg">Login</button>
             <div id="loginError" class="text-red-500 text-sm mt-4"></div>
         </div>
 
         <div id="menu" class="screen text-center">
             <h1 class="text-2xl font-bold text-slate-800 mb-2">Hello, Vera!</h1>
             <div id="starProgress" class="mb-8 text-cyan-600 font-bold bg-cyan-50 py-2 rounded-full shadow-sm">Stars toward reward: 0/5</div>
-            <button id="startPractice" class="w-full bg-cyan-500 text-white py-4 rounded-2xl mb-4 font-bold shadow-md hover:bg-cyan-600 transition">Start Daily Dictation</button>
-            <button id="manageWords" class="w-full bg-slate-100 text-slate-600 py-3 rounded-2xl mb-8 font-medium hover:bg-slate-200 transition">Manage Word List</button>
+            <button id="startPractice" class="w-full bg-cyan-500 text-white py-4 rounded-2xl mb-4 font-bold shadow-md">Start Daily Dictation</button>
+            <button id="manageWords" class="w-full bg-slate-100 text-slate-600 py-3 rounded-2xl mb-8 font-medium">Manage Word List</button>
             <div class="grid grid-cols-2 gap-4 text-sm text-slate-500">
-                <div class="bg-white border rounded-xl p-3">Total: <span id="totalWords" class="font-bold text-slate-800">0</span></div>
-                <div class="bg-white border rounded-xl p-3">Hard: <span id="hardWords" class="font-bold text-red-500">0</span></div>
+                <div class="bg-white border rounded-xl p-3">Total: <span id="totalWords">0</span></div>
+                <div class="bg-white border rounded-xl p-3">Hard: <span id="hardWords">0</span></div>
             </div>
         </div>
 
@@ -53,11 +51,11 @@
         <div id="preview" class="screen">
             <h2 class="text-xl font-bold mb-4 text-center">Preview Words</h2>
             <div id="previewList" class="space-y-3 mb-8"></div>
-            <button id="beginDictation" class="w-full bg-cyan-500 text-white py-4 rounded-2xl font-bold shadow-lg">I'm Ready!</button>
+            <button id="beginDictation" class="w-full bg-cyan-500 text-white py-4 rounded-2xl font-bold">I'm Ready!</button>
         </div>
 
         <div id="dictation" class="screen text-center">
-            <div id="dictSentence" class="text-lg text-slate-700 mb-6 italic leading-relaxed px-4 pt-4 border-t"></div>
+            <div id="dictSentence" class="text-lg text-slate-700 mb-6 italic leading-relaxed px-4 pt-4"></div>
             <div id="dictWord" class="text-4xl font-black text-blue-600 mb-10 tracking-tight"></div>
             <button id="nextWord" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold">Next Word →</button>
         </div>
@@ -77,7 +75,101 @@
         </div>
 
         <div id="superReward" class="fixed inset-0 bg-cyan-600 bg-opacity-95 hidden items-center justify-center p-8 z-50">
-            <div class="text-center text-white max-w-sm w-full reward-card">
+            <div class="text-center text-white max-w-sm w-full">
                 <div class="text-7xl mb-6">🎁</div>
-                <h2 class="text-3xl font-black mb-2">SUPER REWARD!</h2>
-                <div id="prizeName" class="text-2xl font-bold bg-white text-cyan-600 p-8 rounded-3xl shadow-2xl mb-10 mt-4 border-4 border-amber
+                <h2 class="text-3xl font-black mb-2 text-white">SUPER REWARD!</h2>
+                <div id="prizeName" class="text-2xl font-bold bg-white text-cyan-600 p-8 rounded-3xl shadow-2xl mb-10 mt-4 border-4 border-amber-300"></div>
+                <button id="closeReward" class="bg-amber-400 text-amber-900 font-black px-12 py-4 rounded-full text-xl shadow-xl">YEAY!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded",()=>{
+            let words=[], practice=[], marks={}, current=0, stars=0;
+
+            const rewardsPool = [
+                "Suttles Treasure Hunt (£3 item)", "Barnaby & Boo: One Single Scoop",
+                "£3 Pocket Money Boost", "15 min Digital Bonus",
+                "VIP Toothbrushing by Mum", "Extra Chapter: Bedtime Reading",
+                "High-Flyer: 15 min on the Swing in the Street", "Freedom Pass: Skip 1 Cage Cleaning",
+                "Park Dash: 15 min of Play", "Board Game Night", "Chief of the Kitchen: Choose Dinner"
+            ];
+
+            const firebaseConfig={
+                apiKey: "AIzaSyDJRe201hVZmoYlp7DZLLmXv_adnHRXmZs",
+                authDomain: "vocabtrainer-969fd.firebaseapp.com",
+                databaseURL: "https://vocabtrainer-969fd-default-rtdb.europe-west1.firebasedatabase.app",
+                projectId: "vocabtrainer-969fd",
+                storageBucket: "vocabtrainer-969fd.appspot.com",
+                messagingSenderId: "991443793775",
+                appId: "1:991443793775:web:0d044609e2b3eb4e611a9a"
+            };
+
+            firebase.initializeApp(firebaseConfig);
+
+            // КЛЮЧЕВОЙ МОМЕНТ ДЛЯ АВТО-ЛОГИНА
+            firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+            .then(() => {
+                document.getElementById("loginBtn").onclick=()=>{
+                    const email = document.getElementById("loginEmail").value;
+                    const pass = document.getElementById("loginPassword").value;
+                    firebase.auth().signInWithEmailAndPassword(email, pass)
+                    .catch(e=>document.getElementById("loginError").textContent=e.message);
+                };
+            });
+
+            firebase.auth().onAuthStateChanged(user=>{ 
+                if(user){ loadData(); show("menu"); } 
+            });
+
+            function loadData(){
+                firebase.database().ref("words").once("value").then(s=>{ words=s.val()||[]; updateStats(); renderWordList(); });
+                firebase.database().ref("stars").once("value").then(s=>{ stars=s.val()||0; updateStats(); });
+            }
+
+            function save(){ 
+                firebase.database().ref("words").set(words); 
+                firebase.database().ref("stars").set(stars);
+            }
+
+            function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); document.getElementById(id).classList.add("active"); }
+            function updateStats(){
+                document.getElementById("totalWords").textContent=words.length;
+                document.getElementById("hardWords").textContent=words.filter(w=>w.mistakes>0).length;
+                document.getElementById("starProgress").textContent = `Stars toward reward: ${stars}/5`;
+            }
+
+            async function fetchInfo(word, elementId) {
+                const box = document.getElementById(elementId);
+                box.style.display = "block"; box.innerHTML = "Finding info...";
+                try {
+                    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                    const data = await res.json();
+                    if(data[0]) {
+                        const def = data[0].meanings[0].definitions[0].definition;
+                        const syns = data[0].meanings[0].synonyms.slice(0,3).join(", ") || "No common synonyms found";
+                        box.innerHTML = `<strong>Meaning:</strong> ${def}<br><strong>Syns:</strong> ${syns}`;
+                    }
+                } catch(e) { box.innerHTML = "Not found."; }
+            }
+
+            document.getElementById("startPractice").onclick=()=>{
+                practice = [...words].sort(() => Math.random() - 0.5).slice(0, 10);
+                if(practice.length===0) return alert("Add words first!");
+                let list=document.getElementById("previewList"); list.innerHTML="";
+                practice.forEach((w, i)=>{
+                    let item = document.createElement("div");
+                    item.className = "p-4 border-2 rounded-2xl bg-white cursor-pointer font-bold";
+                    item.innerHTML = `<div>${w.text}</div><div id="lookup-${i}" class="lookup-box"></div>`;
+                    item.onclick = () => fetchInfo(w.text, `lookup-${i}`);
+                    list.appendChild(item);
+                });
+                show("preview");
+            }
+
+            document.getElementById("beginDictation").onclick=()=>{ current=0; updateDictationView(); show("dictation"); }
+            function updateDictationView(){
+                const w = practice[current];
+                document.getElementById("dictWord").textContent = w.text;
+                document.getElementById("dictSentence").textContent = w.sentence || "(No sentence)";
