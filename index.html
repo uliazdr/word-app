@@ -6,10 +6,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vocab Trainer</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Vocab Trainer">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 
 <script src="https://cdn.tailwindcss.com"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Clicker+Script&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Clicker+Script&family=Fredoka+One&display=swap" rel="stylesheet">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 
@@ -32,6 +36,7 @@ color:#0891b2;
 text-align:center;
 text-shadow:2px 2px 0 #ffffff,4px 4px 6px rgba(0,0,0,0.15)
 }
+.rewardFont{font-family:'Fredoka One',cursive;font-size:2rem;background:linear-gradient(135deg,#f97316,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .word-panel{max-height:0;overflow:hidden;transition:max-height 0.32s ease}
 .word-card.open .word-panel{max-height:250px}
 .chevron{display:inline-block;transition:transform 0.32s ease;line-height:1}
@@ -109,7 +114,7 @@ Well done, Vera!<br>See you tomorrow!
 <div class="text-7xl mb-3">🎁</div>
 <div class="text-cyan-600 font-black text-2xl mb-1">VERA, YOU DID IT!</div>
 <div class="text-gray-400 font-bold text-xs tracking-widest uppercase mb-6">Super Reward</div>
-<div id="rewardName" class="text-2xl font-black text-gray-800 mb-2 leading-snug"></div>
+<div id="rewardName" class="rewardFont mb-3 leading-snug"></div>
 <div id="rewardDesc" class="text-gray-500 text-sm mb-8 leading-relaxed"></div>
 <button id="rewardGotIt" class="w-full bg-cyan-500 text-white py-4 rounded-xl text-xl font-bold">YEAY! 🎉</button>
 </div>

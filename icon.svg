@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="115" fill="#e8f8ff"/>
+  <!-- Left ear -->
+  <polygon points="105,255 158,75 228,230" fill="#ff9b45"/>
+  <polygon points="128,242 158,110 208,228" fill="#ffcce0"/>
+  <!-- Right ear -->
+  <polygon points="407,255 354,75 284,230" fill="#ff9b45"/>
+  <polygon points="384,242 354,110 304,228" fill="#ffcce0"/>
+  <!-- Head -->
+  <circle cx="256" cy="295" r="188" fill="#ff9b45"/>
+  <!-- Left eye -->
+  <ellipse cx="185" cy="268" rx="38" ry="42" fill="white"/>
+  <ellipse cx="185" cy="272" rx="22" ry="30" fill="#222"/>
+  <circle cx="196" cy="258" r="9" fill="white"/>
+  <circle cx="179" cy="274" r="5" fill="white"/>
+  <!-- Right eye -->
+  <ellipse cx="327" cy="268" rx="38" ry="42" fill="white"/>
+  <ellipse cx="327" cy="272" rx="22" ry="30" fill="#222"/>
+  <circle cx="338" cy="258" r="9" fill="white"/>
+  <circle cx="321" cy="274" r="5" fill="white"/>
+  <!-- Nose -->
+  <ellipse cx="256" cy="332" rx="15" ry="11" fill="#ff6aab"/>
+  <!-- Mouth -->
+  <path d="M 241 344 Q 256 362 271 344" stroke="#a0522d" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <!-- Cheeks -->
+  <ellipse cx="150" cy="325" rx="38" ry="20" fill="#ffaacc" opacity="0.55"/>
+  <ellipse cx="362" cy="325" rx="38" ry="20" fill="#ffaacc" opacity="0.55"/>
+  <!-- Left whiskers -->
+  <line x1="65" y1="312" x2="232" y2="328" stroke="#7a4010" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <line x1="65" y1="335" x2="232" y2="335" stroke="#7a4010" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <line x1="65" y1="358" x2="232" y2="342" stroke="#7a4010" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <!-- Right whiskers -->
+  <line x1="447" y1="312" x2="280" y2="328" stroke="#7a4010" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <line x1="447" y1="335" x2="280" y2="335" stroke="#7a4010" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <line x1="447" y1="358" x2="280" y2="342" stroke="#7a4010" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+</svg>
