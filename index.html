@@ -64,8 +64,10 @@ text-shadow:2px 2px 0 #ffffff,4px 4px 6px rgba(0,0,0,0.15)
 
 <div id="manage" class="screen">
 <h2 class="text-lg font-bold mb-3 text-center">Import Words</h2>
-<textarea id="bulkWords" class="w-full border rounded-lg p-2 h-24 mb-3"></textarea>
-<button id="importWords" class="w-full bg-cyan-500 text-white py-2 rounded-lg mb-4">Import</button>
+<textarea id="bulkWords" placeholder="word&#10;word | sentence" class="w-full border rounded-lg p-2 h-24 mb-3"></textarea>
+<button id="importWords" class="w-full bg-cyan-500 text-white py-2 rounded-lg mb-1">Import</button>
+<div id="importResult" class="text-sm text-gray-400 mb-3 text-center"></div>
+<input id="wordSearch" type="text" placeholder="Search words…" class="w-full border rounded-lg p-2 mb-2 text-sm">
 <div id="wordList" class="max-h-48 overflow-y-auto text-sm mb-4"></div>
 <button id="backMenu" class="w-full bg-gray-200 py-2 rounded-lg">Back</button>
 </div>
@@ -77,7 +79,7 @@ text-shadow:2px 2px 0 #ffffff,4px 4px 6px rgba(0,0,0,0.15)
 </div>
 
 <div id="dictation" class="screen text-center">
-<div id="dictWord" class="text-3xl font-bold text-blue-600 mb-6"></div>
+<div id="dictWord" class="text-2xl font-bold text-blue-600 mb-6 leading-snug"></div>
 <button id="nextWord" class="w-full bg-cyan-500 text-white py-3 rounded-xl">Next</button>
 </div>
 
@@ -208,16 +210,18 @@ list.appendChild(card)
 show("preview")
 }
 
+function dictDisplay(w){ return w.sentence||w.text }
+
 document.getElementById("beginDictation").onclick=()=>{
 current=0
-document.getElementById("dictWord").textContent=practice[current].text
+document.getElementById("dictWord").textContent=dictDisplay(practice[current])
 show("dictation")
 }
 
 document.getElementById("nextWord").onclick=()=>{
 current++
 if(current<practice.length){
-document.getElementById("dictWord").textContent=practice[current].text
+document.getElementById("dictWord").textContent=dictDisplay(practice[current])
 }else buildReview()
 }
 
@@ -325,14 +329,17 @@ show("menu")
 document.getElementById("manageWords").onclick=()=>{renderWordList();show("manage")}
 
 function renderWordList(){
+const query=document.getElementById("wordSearch").value.toLowerCase().trim()
+const filtered=query?words.filter(w=>w.text.toLowerCase().includes(query)):words
 let list=document.getElementById("wordList")
 list.innerHTML=""
-words.forEach((w,i)=>{
+filtered.forEach(w=>{
+const origIdx=words.indexOf(w)
 let row=document.createElement("div")
 row.className="flex justify-between mb-1"
 row.innerHTML=`<span>${w.text}</span><button class="text-red-500">✕</button>`
 row.querySelector("button").onclick=()=>{
-words.splice(i,1)
+words.splice(origIdx,1)
 save();renderWordList();updateStats()
 }
 list.appendChild(row)
@@ -341,13 +348,30 @@ list.appendChild(row)
 
 document.getElementById("importWords").onclick=()=>{
 let text=document.getElementById("bulkWords").value
-text.split(/[\n,]/).map(w=>w.trim()).filter(Boolean)
-.forEach(w=>words.push({text:w,interval:1,ease:2.5,due:today(),mistakes:0}))
+let added=0,updated=0
+text.split(/\n/).map(l=>l.trim()).filter(Boolean).forEach(line=>{
+const parts=line.split("|")
+const wordText=parts[0].trim()
+const sentence=parts[1]?parts[1].trim():null
+if(!wordText) return
+const existing=words.find(w=>w.text.toLowerCase()===wordText.toLowerCase())
+if(existing){
+if(sentence) existing.sentence=sentence
+updated++
+}else{
+const entry={text:wordText,interval:1,ease:2.5,due:today(),mistakes:0}
+if(sentence) entry.sentence=sentence
+words.push(entry)
+added++
+}
+})
 document.getElementById("bulkWords").value=""
+document.getElementById("importResult").textContent=`Added: ${added}, updated: ${updated}`
 save();renderWordList();updateStats()
 }
 
 document.getElementById("backMenu").onclick=()=>show("menu")
+document.getElementById("wordSearch").oninput=()=>renderWordList()
 
 function toggleWord(i,card,wordText){
 if(openIndex!==null&&openIndex!==i){
