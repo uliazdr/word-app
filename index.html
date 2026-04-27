@@ -63,6 +63,7 @@ text-shadow:2px 2px 0 #ffffff,4px 4px 6px rgba(0,0,0,0.15)
 <div>Total Words: <span id="totalWords">0</span></div>
 <div>Hard Words: <span id="hardWords">0</span></div>
 </div>
+<button id="testReward" class="mt-6 text-xs text-gray-300">test reward</button>
 </div>
 
 <div id="manage" class="screen">
@@ -428,6 +429,8 @@ document.getElementById("rewardName").textContent=prize.name
 document.getElementById("rewardDesc").textContent=prize.desc
 document.getElementById("superRewardOverlay").style.display="flex"
 }
+
+document.getElementById("testReward").onclick=()=>showSuperReward()
 
 document.getElementById("rewardGotIt").onclick=()=>{
 document.getElementById("superRewardOverlay").style.display="none"
