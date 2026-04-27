@@ -68,7 +68,6 @@ text-shadow:2px 2px 0 #ffffff,4px 4px 6px rgba(0,0,0,0.15)
 <div>Total Words: <span id="totalWords">0</span></div>
 <div>Hard Words: <span id="hardWords">0</span></div>
 </div>
-<button id="testReward" class="mt-6 text-xs text-gray-300">test reward</button>
 </div>
 
 <div id="manage" class="screen">
@@ -129,7 +128,7 @@ const dictCache={}
 const rewardsPool=[
 {name:"High-Flyer",desc:"15 minutes of pure fun on the swing in the street"},
 {name:"Suttles Treasure Hunt",desc:"Any small item/stationery up to £3"},
-{name:"Barnaby & Boo",desc:"One single scoop in a cone or tub (one scoop!)"},
+{name:"Barnaby & Boo",desc:"One single scoop in a cone or tub"},
 {name:"£3 Pocket Money Boost",desc:"Extra money for the piggy bank"},
 {name:"15 min Digital Bonus",desc:"Extra screen time"},
 {name:"VIP Toothbrushing",desc:"Mum brushes your teeth for you while you relax!"},
@@ -434,8 +433,6 @@ document.getElementById("rewardName").textContent=prize.name
 document.getElementById("rewardDesc").textContent=prize.desc
 document.getElementById("superRewardOverlay").style.display="flex"
 }
-
-document.getElementById("testReward").onclick=()=>showSuperReward()
 
 document.getElementById("rewardGotIt").onclick=()=>{
 document.getElementById("superRewardOverlay").style.display="none"
