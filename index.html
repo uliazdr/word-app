@@ -32,6 +32,10 @@ color:#0891b2;
 text-align:center;
 text-shadow:2px 2px 0 #ffffff,4px 4px 6px rgba(0,0,0,0.15)
 }
+.word-panel{max-height:0;overflow:hidden;transition:max-height 0.32s ease}
+.word-card.open .word-panel{max-height:250px}
+.chevron{display:inline-block;transition:transform 0.32s ease;line-height:1}
+.word-card.open .chevron{transform:rotate(90deg)}
 </style>
 
 </head>
@@ -66,8 +70,8 @@ text-shadow:2px 2px 0 #ffffff,4px 4px 6px rgba(0,0,0,0.15)
 <button id="backMenu" class="w-full bg-gray-200 py-2 rounded-lg">Back</button>
 </div>
 
-<div id="preview" class="screen text-center">
-<h2 class="text-lg font-bold mb-4">Preview Words</h2>
+<div id="preview" class="screen">
+<h2 class="text-lg font-bold mb-4 text-center">Preview Words</h2>
 <div id="previewList" class="mb-4"></div>
 <button id="beginDictation" class="w-full bg-cyan-500 text-white py-3 rounded-xl">Start Dictation</button>
 </div>
@@ -91,23 +95,13 @@ Well done, Vera!<br>See you tomorrow!
 <button id="backHome" class="w-full bg-cyan-500 text-white py-3 rounded-xl">Back to Menu</button>
 </div>
 
-<div id="wordDetail" class="screen" style="justify-content:flex-start">
-<div class="flex items-center mb-6">
-<button id="backToPreview" class="text-cyan-500 font-semibold mr-4">← Back</button>
-<h2 id="detailWordTitle" class="text-xl font-bold text-blue-600"></h2>
-</div>
-<div id="detailLoading" class="text-center text-gray-400 py-8">Loading…</div>
-<div id="detailContent" class="hidden"></div>
-<div id="detailError" class="hidden text-center text-gray-400 py-8"></div>
-</div>
-
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded",()=>{
 
 let words=[],history=[],practice=[],marks={},current=0
-let confettiInterval=null
+let confettiInterval=null,openIndex=null
 const dictCache={}
 
 const firebaseConfig={
@@ -192,14 +186,24 @@ return result
 document.getElementById("startPractice").onclick=()=>{
 practice=getPracticeWords()
 if(practice.length===0) return
+openIndex=null
 let list=document.getElementById("previewList")
 list.innerHTML=""
-practice.forEach(w=>{
-let d=document.createElement("div")
-d.textContent=w.text
-d.style.cursor="pointer"
-d.onclick=()=>showWordDetail(w.text)
-list.appendChild(d)
+practice.forEach((w,i)=>{
+let card=document.createElement("div")
+card.className="word-card mb-3 rounded-xl bg-gray-50 overflow-hidden"
+card.innerHTML=`
+<div class="word-row flex items-center justify-between px-4 cursor-pointer" style="min-height:60px">
+<span class="text-xl font-medium text-gray-800">${w.text}</span>
+<span class="chevron text-gray-400 text-xl">›</span>
+</div>
+<div class="word-panel">
+<div class="px-4 pt-2 pb-4 border-t border-gray-100" id="panel-${i}">
+<span class="text-gray-400 text-sm">Tap to look up…</span>
+</div>
+</div>`
+card.querySelector(".word-row").onclick=()=>toggleWord(i,card,w.text)
+list.appendChild(card)
 })
 show("preview")
 }
@@ -345,52 +349,50 @@ save();renderWordList();updateStats()
 
 document.getElementById("backMenu").onclick=()=>show("menu")
 
-document.getElementById("backToPreview").onclick=()=>show("preview")
-
-async function fetchWordInfo(word){
-if(dictCache[word]) return dictCache[word]
-const res=await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`)
-if(!res.ok) throw new Error("not found")
-const data=await res.json()
-dictCache[word]=data
-return data
+function toggleWord(i,card,wordText){
+if(openIndex!==null&&openIndex!==i){
+document.querySelectorAll(".word-card")[openIndex].classList.remove("open")
+}
+if(openIndex===i){
+card.classList.remove("open")
+openIndex=null
+return
+}
+card.classList.add("open")
+openIndex=i
+const panel=document.getElementById(`panel-${i}`)
+if(panel.dataset.loaded) return
+panel.dataset.loaded="1"
+panel.innerHTML=`<span class="text-gray-400 text-sm">Loading…</span>`
+fetchWordInfo(wordText)
+.then(data=>{panel.innerHTML=buildAccordionContent(data,wordText)})
+.catch(e=>{
+console.error("Dictionary fetch failed:",e)
+panel.innerHTML=`<span class="text-gray-400 text-sm">No entry found.</span>`
+})
 }
 
-function buildDetailHTML(data){
-const meanings=data[0].meanings.slice(0,3)
-let html=""
-meanings.forEach(m=>{
-const def=m.definitions[0]
-if(!def) return
-const syns=[...new Set([...(m.synonyms||[]),...(def.synonyms||[])])].slice(0,8)
-html+=`<div class="mb-4 pb-4 border-b border-gray-100 last:border-b-0">`
-html+=`<span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">${m.partOfSpeech}</span>`
-html+=`<p class="text-gray-700 mt-1 mb-2">${def.definition}</p>`
-if(def.example) html+=`<p class="text-gray-500 italic text-sm mb-2">"${def.example}"</p>`
-if(syns.length) html+=`<p class="text-sm text-cyan-600">${syns.join(" · ")}</p>`
-html+=`</div>`
-})
+function buildAccordionContent(data,wordText){
+const meaning=data[0].meanings[0]
+const def=meaning?meaning.definitions[0]:null
+if(!def) return`<span class="text-gray-400 text-sm">No definitions available.</span>`
+const syns=[...new Set([...(meaning.synonyms||[]),...(def.synonyms||[])])].slice(0,3)
+const camUrl=`https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(wordText.trim())}`
+let html=`<p class="text-gray-700 text-sm mb-2">${def.definition}</p>`
+if(syns.length) html+=`<p class="text-cyan-600 text-sm mb-3">${syns.join(" · ")}</p>`
+html+=`<a href="${camUrl}" target="_blank" rel="noopener" class="text-sm text-blue-500 font-medium">Full Definition →</a>`
 return html
 }
 
-function showWordDetail(wordText){
-document.getElementById("detailWordTitle").textContent=wordText
-document.getElementById("detailLoading").classList.remove("hidden")
-document.getElementById("detailContent").classList.add("hidden")
-document.getElementById("detailError").classList.add("hidden")
-show("wordDetail")
-fetchWordInfo(wordText)
-.then(data=>{
-document.getElementById("detailContent").innerHTML=buildDetailHTML(data)
-document.getElementById("detailLoading").classList.add("hidden")
-document.getElementById("detailContent").classList.remove("hidden")
-})
-.catch(()=>{
-document.getElementById("detailLoading").classList.add("hidden")
-const err=document.getElementById("detailError")
-err.textContent="No dictionary entry found for this word."
-err.classList.remove("hidden")
-})
+async function fetchWordInfo(word){
+const key=word.trim()
+if(dictCache[key]) return dictCache[key]
+const res=await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(key)}`)
+if(!res.ok) throw new Error("not found")
+const data=await res.json()
+if(!Array.isArray(data)||!data[0]||!data[0].meanings) throw new Error("unexpected response")
+dictCache[key]=data
+return data
 }
 
 })
