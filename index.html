@@ -56,7 +56,10 @@ text-shadow:2px 2px 0 #ffffff,4px 4px 6px rgba(0,0,0,0.15)
 <h1 class="text-2xl font-bold text-blue-600 mb-6">Vocabulary Trainer</h1>
 <button id="startPractice" class="w-full bg-cyan-500 text-white py-3 rounded-xl mb-4">Start Practice</button>
 <button id="manageWords" class="w-full bg-blue-500 text-white py-3 rounded-xl mb-4">Manage Word List</button>
-<div class="text-center text-sm text-gray-500 mt-6">
+<div class="bg-yellow-50 rounded-xl px-4 py-3 mt-2 mb-2">
+<div id="starsDisplay" class="text-yellow-600 font-semibold text-sm">⭐ Stars toward reward: 0 / 5</div>
+</div>
+<div class="text-center text-sm text-gray-500 mt-2">
 <div>Total Words: <span id="totalWords">0</span></div>
 <div>Hard Words: <span id="hardWords">0</span></div>
 </div>
@@ -89,8 +92,9 @@ text-shadow:2px 2px 0 #ffffff,4px 4px 6px rgba(0,0,0,0.15)
 </div>
 
 <div id="results" class="screen text-center">
-<div id="score" class="scoreBig mb-4"></div>
-<div class="resultText mb-6">
+<div id="score" class="scoreBig mb-2"></div>
+<div id="earnedStar" class="hidden text-yellow-500 font-bold text-lg mb-2">⭐ You've earned a star!</div>
+<div class="resultText mb-4">
 Well done, Vera!<br>See you tomorrow!
 </div>
 <img id="rewardImage" class="w-full h-64 object-contain mb-4">
@@ -99,12 +103,36 @@ Well done, Vera!<br>See you tomorrow!
 
 </div>
 
+<div id="superRewardOverlay" style="display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.78)" class="flex items-center justify-center p-4">
+<div class="bg-white rounded-[24px] shadow-2xl p-8 w-full max-w-md text-center">
+<div class="text-7xl mb-3">🎁</div>
+<div class="text-cyan-600 font-black text-2xl mb-1">VERA, YOU DID IT!</div>
+<div class="text-gray-400 font-bold text-xs tracking-widest uppercase mb-6">Super Reward</div>
+<div id="rewardName" class="text-2xl font-black text-gray-800 mb-2 leading-snug"></div>
+<div id="rewardDesc" class="text-gray-500 text-sm mb-8 leading-relaxed"></div>
+<button id="rewardGotIt" class="w-full bg-cyan-500 text-white py-4 rounded-xl text-xl font-bold">YEAY! 🎉</button>
+</div>
+</div>
+
 <script>
 document.addEventListener("DOMContentLoaded",()=>{
 
 let words=[],history=[],practice=[],marks={},current=0
-let confettiInterval=null,openIndex=null
+let confettiInterval=null,openIndex=null,stars=0
 const dictCache={}
+const rewardsPool=[
+{name:"High-Flyer",desc:"15 minutes of pure fun on the swing in the street"},
+{name:"Suttles Treasure Hunt",desc:"Any small item/stationery up to £3"},
+{name:"Barnaby & Boo",desc:"One single scoop in a cone or tub (one scoop!)"},
+{name:"£3 Pocket Money Boost",desc:"Extra money for the piggy bank"},
+{name:"15 min Digital Bonus",desc:"Extra screen time"},
+{name:"VIP Toothbrushing",desc:"Mum brushes your teeth for you while you relax!"},
+{name:"Extra Chapter",desc:"Extra 15 min of bedtime reading"},
+{name:"Freedom Pass",desc:"Skip one pet cage cleaning session this week"},
+{name:"Park Dash",desc:"15 minutes of extra play time at the park"},
+{name:"Board Game Night",desc:"You choose the game, and we all play together"},
+{name:"Chief of the Kitchen",desc:"You choose the dinner menu for the whole family"}
+]
 
 const firebaseConfig={
 apiKey:"AIzaSyDJRe201hVZmoYlp7DZLLmXv_adnHRXmZs",
@@ -140,11 +168,23 @@ updateStats(); renderWordList()
 firebase.database().ref("history").once("value").then(s=>{
 history=s.val()||[]
 })
+firebase.database().ref("stars").once("value").then(s=>{
+stars=s.val()||0
+updateStars()
+})
 }
 
 function save(){
 firebase.database().ref("words").set(words)
 firebase.database().ref("history").set(history)
+}
+
+function saveStars(){
+firebase.database().ref("stars").set(stars)
+}
+
+function updateStars(){
+document.getElementById("starsDisplay").textContent=`⭐ Stars toward reward: ${stars} / 5`
 }
 
 function show(id){
@@ -272,7 +312,7 @@ btn.classList.remove("opacity-50")
 
 document.getElementById("finish").onclick=()=>{
 
-let score=0
+let score=0,superReward=false
 
 practice.forEach((w,i)=>{
 if(!w.interval)w.interval=1
@@ -294,10 +334,20 @@ w.due=today()+w.interval
 history.push({date:today(),score:score})
 if(history.length>30)history.shift()
 
+if(score>=8){
+stars++
+if(stars>=5){ superReward=true; stars=0 }
+}
+
 save()
+saveStars()
 updateStats()
+updateStars()
 
 document.getElementById("score").textContent=`${score}/10`
+
+const earnedEl=document.getElementById("earnedStar")
+earnedEl.classList.toggle("hidden",!(score>=8&&!superReward))
 
 let imgs=["1.png","2.png","3.png","4.png","5.png"]
 document.getElementById("rewardImage").src=imgs[Math.floor(Math.random()*imgs.length)]
@@ -307,22 +357,21 @@ show("results")
 if(confettiInterval) clearInterval(confettiInterval)
 
 if(score>=8){
+const iv=superReward?600:1200
+const pc=superReward?200:120
+const sp=superReward?140:100
 confettiInterval=setInterval(()=>{
-confetti({
-particleCount:120,
-spread:100,
-origin:{y:0.6}
-})
-},1200)
+confetti({particleCount:pc,spread:sp,origin:{y:0.6}})
+},iv)
 }
+
+if(superReward) showSuperReward()
 
 }
 
 document.getElementById("backHome").onclick=()=>{
-if(confettiInterval){
-clearInterval(confettiInterval)
-confettiInterval=null
-}
+if(confettiInterval){ clearInterval(confettiInterval); confettiInterval=null }
+document.getElementById("earnedStar").classList.add("hidden")
 show("menu")
 }
 
@@ -372,6 +421,20 @@ save();renderWordList();updateStats()
 
 document.getElementById("backMenu").onclick=()=>show("menu")
 document.getElementById("wordSearch").oninput=()=>renderWordList()
+
+function showSuperReward(){
+const prize=rewardsPool[Math.floor(Math.random()*rewardsPool.length)]
+document.getElementById("rewardName").textContent=prize.name
+document.getElementById("rewardDesc").textContent=prize.desc
+document.getElementById("superRewardOverlay").style.display="flex"
+}
+
+document.getElementById("rewardGotIt").onclick=()=>{
+document.getElementById("superRewardOverlay").style.display="none"
+if(confettiInterval){ clearInterval(confettiInterval); confettiInterval=null }
+document.getElementById("earnedStar").classList.add("hidden")
+show("menu")
+}
 
 function toggleWord(i,card,wordText){
 if(openIndex!==null&&openIndex!==i){
