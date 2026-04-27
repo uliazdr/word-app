@@ -1,35 +1,53 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Pink background -->
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Generate icon.png</title></head>
+<body style="text-align:center;padding:40px;font-family:sans-serif;background:#f0faff">
+<h2>Cat Icon Generator</h2>
+<p>Click the button — <b>icon.png</b> will download automatically.<br>Save it into your <b>word_app</b> folder.</p>
+<canvas id="c" width="512" height="512" style="border-radius:20px;margin:20px auto;display:block"></canvas>
+<button onclick="download()" style="padding:14px 32px;font-size:18px;cursor:pointer;background:#FF9EC3;color:white;border:none;border-radius:12px;margin-top:10px">⬇ Download icon.png</button>
+<script>
+const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="115" fill="#FFB6D9"/>
-  <!-- Left ear -->
   <polygon points="138,215 175,95 222,205" fill="white"/>
   <polygon points="155,210 175,118 210,204" fill="#FFAAD4"/>
-  <!-- Right ear -->
   <polygon points="374,215 337,95 290,205" fill="white"/>
   <polygon points="357,210 337,118 302,204" fill="#FFAAD4"/>
-  <!-- Head -->
   <circle cx="256" cy="300" r="185" fill="white"/>
-  <!-- Left eye -->
   <ellipse cx="193" cy="268" rx="30" ry="35" fill="#2d2d2d"/>
   <circle cx="203" cy="255" r="11" fill="white"/>
   <circle cx="187" cy="272" r="6" fill="white"/>
-  <!-- Right eye -->
   <ellipse cx="319" cy="268" rx="30" ry="35" fill="#2d2d2d"/>
   <circle cx="329" cy="255" r="11" fill="white"/>
   <circle cx="313" cy="272" r="6" fill="white"/>
-  <!-- Nose -->
   <ellipse cx="256" cy="322" rx="12" ry="9" fill="#FF9EC3"/>
-  <!-- Mouth -->
   <path d="M 244 334 Q 256 348 268 334" stroke="#FF9EC3" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-  <!-- Cheeks -->
   <ellipse cx="158" cy="318" rx="36" ry="20" fill="#FFB6D9" opacity="0.65"/>
   <ellipse cx="354" cy="318" rx="36" ry="20" fill="#FFB6D9" opacity="0.65"/>
-  <!-- Left whiskers -->
   <line x1="72" y1="310" x2="234" y2="320" stroke="#ddd" stroke-width="2.5" stroke-linecap="round"/>
   <line x1="72" y1="328" x2="234" y2="328" stroke="#ddd" stroke-width="2.5" stroke-linecap="round"/>
   <line x1="72" y1="346" x2="234" y2="336" stroke="#ddd" stroke-width="2.5" stroke-linecap="round"/>
-  <!-- Right whiskers -->
   <line x1="440" y1="310" x2="278" y2="320" stroke="#ddd" stroke-width="2.5" stroke-linecap="round"/>
   <line x1="440" y1="328" x2="278" y2="328" stroke="#ddd" stroke-width="2.5" stroke-linecap="round"/>
   <line x1="440" y1="346" x2="278" y2="336" stroke="#ddd" stroke-width="2.5" stroke-linecap="round"/>
-</svg>
+</svg>`
+
+const blob=new Blob([svg],{type:'image/svg+xml'})
+const url=URL.createObjectURL(blob)
+const img=new Image()
+img.onload=()=>{
+  const ctx=document.getElementById('c').getContext('2d')
+  ctx.drawImage(img,0,0)
+  URL.revokeObjectURL(url)
+}
+img.src=url
+
+function download(){
+  const a=document.createElement('a')
+  a.download='icon.png'
+  a.href=document.getElementById('c').toDataURL('image/png')
+  a.click()
+}
+</script>
+</body>
+</html>
