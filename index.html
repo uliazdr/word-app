@@ -126,17 +126,26 @@ let words=[],history=[],practice=[],marks={},current=0
 let confettiInterval=null,openIndex=null,stars=0
 const dictCache={}
 const rewardsPool=[
-{name:"High-Flyer",desc:"15 minutes of pure fun on the swing in the street"},
 {name:"Suttles Treasure Hunt",desc:"Any small item/stationery up to £3"},
 {name:"Barnaby & Boo",desc:"One single scoop in a cone or tub"},
 {name:"£3 Pocket Money Boost",desc:"Extra money for the piggy bank"},
 {name:"15 min Digital Bonus",desc:"Extra screen time"},
 {name:"VIP Toothbrushing",desc:"Mum brushes your teeth for you while you relax!"},
 {name:"Extra Chapter",desc:"Extra 15 min of bedtime reading"},
-{name:"Freedom Pass",desc:"Skip one pet cage cleaning session this week"},
 {name:"Park Dash",desc:"15 minutes of extra play time at the park"},
 {name:"Board Game Night",desc:"You choose the game, and we all play together"},
-{name:"Chief of the Kitchen",desc:"You choose the dinner menu for the whole family"}
+{name:"Bike Trail Adventure",desc:"A special bike ride with Dad to your favorite spot"},
+{name:"Movie Night",desc:"You pick the film, we sort the snacks, and watch it together!"},
+{name:"Playdate VIP",desc:"Pick a friend to invite over, we'll handle the snacks and fun"},
+{name:"Art Attack",desc:"30 minutes of uninterrupted creative time together with Mum"},
+{name:"Spa Session",desc:"Relaxing home salon — nails, face masks... whatever you like!"},
+{name:"Dad's Magic Hands",desc:"A relaxing 15-minute massage from Dad before bedtime"},
+{name:"Late Night Talk",desc:"Bedtime pushed back by 15 minutes for a secret chat with Mum or Dad"},
+{name:"Silly Snapshot Studio",desc:"15 minutes of crazy dressing up and taking funny photos"},
+{name:"Blanket Fort Kingdom",desc:"We build a massive blanket fort together in the living room for your ultimate cozy hangout"},
+{name:"Torchlit Night Walk",desc:"A 15-minute night walk with torches around the block with parents just before bed"},
+{name:"Breakfast in Bed",desc:"Mum or Dad serves you your favourite breakfast in bed on Saturday morning!"},
+{name:"Baking Partner",desc:"You choose the sweet treat, and we bake and decorate it together from scratch"}
 ]
 
 const firebaseConfig={
