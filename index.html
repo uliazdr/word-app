@@ -463,10 +463,12 @@ card.classList.add("open")
 openIndex=i
 const panel=document.getElementById(`panel-${i}`)
 if(panel.dataset.loaded) return
-panel.dataset.loaded="1"
 panel.innerHTML=`<span class="text-gray-400 text-sm">Loading…</span>`
 fetchWordInfo(wordText)
-.then(data=>{panel.innerHTML=buildAccordionContent(data,wordText)})
+.then(data=>{
+panel.dataset.loaded="1"
+panel.innerHTML=buildAccordionContent(data,wordText)
+})
 .catch(e=>{
 console.error("Dictionary fetch failed:",e)
 panel.innerHTML=`<span class="text-gray-400 text-sm">No entry found.</span>`
@@ -474,13 +476,14 @@ panel.innerHTML=`<span class="text-gray-400 text-sm">No entry found.</span>`
 }
 
 function buildAccordionContent(data,wordText){
-const meaning=data[0].meanings[0]
-const def=meaning?meaning.definitions[0]:null
-if(!def) return`<span class="text-gray-400 text-sm">No definitions available.</span>`
-const syns=[...new Set([...(meaning.synonyms||[]),...(def.synonyms||[])])].slice(0,3)
+const entry=data.en&&data.en[0]
+if(!entry||!entry.definitions||!entry.definitions[0]) return`<span class="text-gray-400 text-sm">No definitions available.</span>`
+const defText=entry.definitions[0].definition.replace(/<[^>]+>/g,'')
+const pos=entry.partOfSpeech||''
 const camUrl=`https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(wordText.trim())}`
-let html=`<p class="text-gray-700 text-sm mb-2">${def.definition}</p>`
-if(syns.length) html+=`<p class="text-cyan-600 text-sm mb-3">${syns.join(" · ")}</p>`
+let html=''
+if(pos) html+=`<p class="text-gray-500 text-xs mb-1 italic">${pos}</p>`
+html+=`<p class="text-gray-700 text-sm mb-2">${defText}</p>`
 html+=`<a href="${camUrl}" target="_blank" rel="noopener" class="text-sm text-blue-500 font-medium">Full Definition →</a>`
 return html
 }
@@ -488,12 +491,18 @@ return html
 async function fetchWordInfo(word){
 const key=word.trim()
 if(dictCache[key]) return dictCache[key]
-const res=await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(key)}`)
+const controller=new AbortController()
+const tid=setTimeout(()=>controller.abort(),5000)
+try{
+const res=await fetch(`https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(key)}`,{signal:controller.signal})
 if(!res.ok) throw new Error("not found")
 const data=await res.json()
-if(!Array.isArray(data)||!data[0]||!data[0].meanings) throw new Error("unexpected response")
+if(!data.en||!data.en[0]||!data.en[0].definitions) throw new Error("unexpected response")
 dictCache[key]=data
 return data
+}finally{
+clearTimeout(tid)
+}
 }
 
 })
